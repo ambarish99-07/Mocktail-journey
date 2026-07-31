@@ -1,0 +1,305 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { LocateFixed, MessageCircle, ShoppingBag } from 'lucide-react';
+import { Container } from '@/components/ui/Container';
+import { Button, buttonClasses } from '@/components/ui/Button';
+import { CartSummary } from '@/components/cart/CartSummary';
+import { FulfilmentToggle } from '@/components/checkout/FulfilmentToggle';
+import { useCartStore } from '@/lib/store/cart-store';
+import { useLoyaltyStore, deriveLoyaltyTier } from '@/lib/store/loyalty-store';
+import { useOrderStore } from '@/lib/store/order-store';
+import { computeOrderTotals, estimatedDeliveryMinutes } from '@/lib/pricing';
+import { checkoutSchema, type CheckoutFormValues } from '@/lib/validation';
+import { shareCurrentLocation, buildWhatsAppMessage, buildWhatsAppLink } from '@/lib/whatsapp';
+import { generateOrderId, cn } from '@/lib/utils';
+import { FormField, inputClass } from '@/components/ui/FormField';
+import type { FulfilmentType } from '@/types/order';
+
+export function CheckoutClient() {
+  const router = useRouter();
+  const items = useCartStore((s) => s.items);
+  const clearCart = useCartStore((s) => s.clearCart);
+  const { completedOrderCount, isGoldMember, recordOrderCompleted } = useLoyaltyStore();
+  const setLastOrder = useOrderStore((s) => s.setLastOrder);
+
+  const [locationStatus, setLocationStatus] = useState<'idle' | 'loading' | 'error'>('idle');
+  const [locationError, setLocationError] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    trigger,
+    getValues,
+    formState: { errors, isSubmitting },
+  } = useForm<CheckoutFormValues>({
+    resolver: zodResolver(checkoutSchema),
+    defaultValues: { fulfilment: 'delivery' },
+  });
+
+  const fulfilment = watch('fulfilment');
+  const loyaltyTier = deriveLoyaltyTier(completedOrderCount, isGoldMember);
+  const totals = computeOrderTotals(items, { fulfilment, loyaltyTier });
+
+  const handleShareLocation = async () => {
+    setLocationStatus('loading');
+    setLocationError(null);
+    try {
+      const { mapsLink } = await shareCurrentLocation();
+      setValue('mapsLink', mapsLink, { shouldValidate: true });
+      setLocationStatus('idle');
+    } catch {
+      setLocationStatus('error');
+      setLocationError('Location permission denied. Please paste a Google Maps link manually below.');
+    }
+  };
+
+  const onPlaceOrder = (data: CheckoutFormValues) => {
+    const order = {
+      id: generateOrderId(),
+      createdAt: new Date().toISOString(),
+      fulfilment: data.fulfilment,
+      delivery:
+        data.fulfilment === 'delivery'
+          ? {
+              fullName: data.fullName,
+              phone: data.phone,
+              address: data.address || '',
+              city: data.city || '',
+              pincode: data.pincode || '',
+              mapsLink: data.mapsLink || undefined,
+              specialInstructions: data.specialInstructions || undefined,
+            }
+          : null,
+      totals,
+      estimatedMinutes: estimatedDeliveryMinutes(data.fulfilment),
+    };
+
+    // TODO: replace with a real backend call once order intake API exists.
+    // eslint-disable-next-line no-console
+    console.log('New direct website order (placeholder — notify restaurant):', order);
+
+    setLastOrder(order);
+    recordOrderCompleted();
+    clearCart();
+    router.push('/checkout/confirmation');
+  };
+
+  const handleWhatsAppOrder = async () => {
+    const valid = await trigger(['fullName', 'phone', 'address']);
+    if (!valid) return;
+    const data = getValues();
+    const fullAddress = data.address
+      ? [data.address, data.city, data.pincode].filter(Boolean).join(', ')
+      : '(pickup — no address)';
+    const message = buildWhatsAppMessage({
+      customerName: data.fullName,
+      phone: data.phone,
+      address: fullAddress,
+      mapsLink: data.mapsLink || undefined,
+      specialInstructions: data.specialInstructions || undefined,
+      items,
+      total: totals.total,
+    });
+    window.open(buildWhatsAppLink(message), '_blank', 'noopener,noreferrer');
+  };
+
+  if (items.length === 0) {
+    return (
+      <Container className="flex min-h-[50vh] flex-col items-center justify-center gap-4 py-24 text-center">
+        <ShoppingBag className="h-10 w-10 text-tbc-cream-dim" aria-hidden="true" />
+        <h1 className="text-2xl font-semibold">Your cart is empty</h1>
+        <p className="text-tbc-cream-muted">Add a few drinks to your cart before checking out.</p>
+        <Link href="/menu" className={buttonClasses('gold', 'md')}>
+          Browse Menu
+        </Link>
+      </Container>
+    );
+  }
+
+  return (
+    <Container className="py-16">
+      <h1 className="text-3xl font-semibold sm:text-4xl">Checkout</h1>
+
+      <form
+        onSubmit={handleSubmit(onPlaceOrder)}
+        className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_400px]"
+        noValidate
+      >
+        <div className="space-y-8">
+          <section>
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-tbc-gold-400">
+              Fulfilment
+            </h2>
+            <FulfilmentToggle
+              value={fulfilment}
+              onChange={(v: FulfilmentType) => setValue('fulfilment', v, { shouldValidate: true })}
+            />
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-tbc-gold-400">
+              Your Details
+            </h2>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <FormField id="checkout-full-name" label="Full Name" error={errors.fullName?.message}>
+                <input
+                  id="checkout-full-name"
+                  {...register('fullName')}
+                  className={inputClass}
+                  autoComplete="name"
+                  placeholder="Your name"
+                />
+              </FormField>
+              <FormField id="checkout-phone" label="Phone Number" error={errors.phone?.message}>
+                <input
+                  id="checkout-phone"
+                  {...register('phone')}
+                  className={inputClass}
+                  autoComplete="tel"
+                  placeholder="10-digit mobile number"
+                />
+              </FormField>
+            </div>
+
+            {fulfilment === 'delivery' && (
+              <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <FormField
+                  id="checkout-address"
+                  label="Delivery Address"
+                  error={errors.address?.message}
+                  className="sm:col-span-2"
+                >
+                  <input
+                    id="checkout-address"
+                    {...register('address')}
+                    className={inputClass}
+                    autoComplete="street-address"
+                    placeholder="House / street / landmark"
+                  />
+                </FormField>
+                <FormField id="checkout-city" label="City" error={errors.city?.message}>
+                  <input
+                    id="checkout-city"
+                    {...register('city')}
+                    className={inputClass}
+                    autoComplete="address-level2"
+                  />
+                </FormField>
+                <FormField id="checkout-pincode" label="Pincode" error={errors.pincode?.message}>
+                  <input
+                    id="checkout-pincode"
+                    {...register('pincode')}
+                    className={inputClass}
+                    autoComplete="postal-code"
+                  />
+                </FormField>
+
+                <div className="sm:col-span-2">
+                  <button
+                    type="button"
+                    onClick={handleShareLocation}
+                    disabled={locationStatus === 'loading'}
+                    className="flex items-center gap-2 text-sm font-medium text-tbc-emerald-400 hover:underline disabled:opacity-60"
+                  >
+                    <LocateFixed className="h-4 w-4" aria-hidden="true" />
+                    {locationStatus === 'loading' ? 'Getting your location…' : 'Share Delivery Location'}
+                  </button>
+                  {locationError && <p className="mt-1.5 text-xs text-amber-400">{locationError}</p>}
+                  <FormField
+                    id="checkout-maps-link"
+                    label="Google Maps Link (optional)"
+                    error={errors.mapsLink?.message}
+                    className="mt-2"
+                  >
+                    <input
+                      id="checkout-maps-link"
+                      {...register('mapsLink')}
+                      className={inputClass}
+                      placeholder="https://maps.google.com/?q=..."
+                    />
+                  </FormField>
+                </div>
+
+                <FormField
+                  id="checkout-instructions"
+                  label="Special Instructions (optional)"
+                  error={errors.specialInstructions?.message}
+                  className="sm:col-span-2"
+                >
+                  <textarea
+                    id="checkout-instructions"
+                    {...register('specialInstructions')}
+                    className={cn(inputClass, 'min-h-[80px] resize-y')}
+                    placeholder="E.g. less sugar, ring the bell twice..."
+                  />
+                </FormField>
+              </div>
+            )}
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-tbc-gold-400">
+              Payment Method
+            </h2>
+            <div className="rounded-xl2 border border-tbc-charcoal-border bg-tbc-charcoal-light p-4 text-sm text-tbc-cream-muted">
+              Pay on {fulfilment === 'delivery' ? 'Delivery' : 'Pickup'} (Cash / UPI at the counter).
+              <span className="mt-1 block text-xs text-tbc-cream-dim">
+                Online payments (Razorpay / UPI) are coming soon.
+              </span>
+            </div>
+          </section>
+        </div>
+
+        <aside className="h-fit rounded-xl2 border border-tbc-charcoal-border bg-tbc-charcoal-light p-6">
+          <h2 className="mb-4 text-lg font-semibold">Order Summary</h2>
+          <ul className="mb-4 space-y-3 border-b border-tbc-charcoal-border pb-4">
+            {items.map((item) => (
+              <li key={item.lineId} className="flex items-center gap-3">
+                <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg">
+                  <Image src={item.image} alt="" fill sizes="48px" className="object-cover" />
+                </div>
+                <div className="flex-1 text-sm">
+                  <p className="font-medium leading-tight">{item.signatureName}</p>
+                  <p className="text-xs text-tbc-cream-dim">Qty {item.quantity}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          <CartSummary totals={totals} />
+
+          <p className="mt-4 text-xs text-tbc-cream-dim">
+            Estimated {fulfilment === 'delivery' ? 'delivery' : 'pickup'} time:{' '}
+            <strong className="text-tbc-cream">
+              {estimatedDeliveryMinutes(fulfilment)} minutes
+            </strong>
+          </p>
+
+          <Button type="submit" variant="gold" size="lg" className="mt-6 w-full" disabled={isSubmitting}>
+            {isSubmitting ? 'Placing Order…' : 'Place Order Directly'}
+          </Button>
+
+          <Button
+            type="button"
+            variant="whatsapp"
+            size="md"
+            className="mt-3 w-full"
+            onClick={handleWhatsAppOrder}
+          >
+            <MessageCircle className="h-4 w-4" aria-hidden="true" />
+            Send Order via WhatsApp Instead
+          </Button>
+        </aside>
+      </form>
+    </Container>
+  );
+}
+

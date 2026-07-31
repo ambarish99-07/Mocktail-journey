@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  * {
+    @apply border-tbc-charcoal-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-tbc-black text-tbc-cream font-body antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading text-tbc-cream;
+  }
+
+  ::selection {
+    @apply bg-tbc-gold-400/30 text-tbc-cream;
+  }
+
+  /* Visible, high-contrast focus states for keyboard users */
+  :focus-visible {
+    outline: 2px solid theme('colors.tbc-gold.400');
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* Respect reduced-motion preference site-wide */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .container-tbc {
+    @apply container mx-auto max-w-7xl;
+  }
+
+  /* Skip-to-content link, visible only on keyboard focus */
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100]
+      focus:rounded-full focus:bg-tbc-gold-400 focus:px-5 focus:py-2.5 focus:text-tbc-black
+      focus:font-semibold;
+  }
+
+  .text-gold-gradient {
+    @apply bg-gold-gradient bg-clip-text text-transparent;
+  }
+}
