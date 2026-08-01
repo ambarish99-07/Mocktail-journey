@@ -1,8 +1,12 @@
+const isDev = process.env.NODE_ENV !== 'production';
+
 // Third-party origins the app legitimately loads scripts/frames/connects to —
 // keep this list exact rather than using wildcards, so the CSP actually constrains something.
 const CSP_SCRIPT_SRC = [
   "'self'",
   "'unsafe-inline'", // required by next/script inline snippets (GA4/Clarity init) and Next's own hydration scripts
+  // next dev's hot-reload/webpack runtime uses eval() — never needed (or allowed) in production.
+  ...(isDev ? ["'unsafe-eval'"] : []),
   'https://www.googletagmanager.com',
   'https://www.clarity.ms',
   'https://checkout.razorpay.com',
@@ -12,6 +16,8 @@ const CSP_CONNECT_SRC = [
   'https://www.google-analytics.com',
   'https://www.clarity.ms',
   'https://api.razorpay.com',
+  // next dev's Fast Refresh websocket.
+  ...(isDev ? ['ws://localhost:*', 'ws://127.0.0.1:*'] : []),
 ];
 const CSP_FRAME_SRC = ["'self'", 'https://checkout.razorpay.com', 'https://api.razorpay.com'];
 
