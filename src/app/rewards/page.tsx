@@ -6,6 +6,7 @@ import { SectionHeading } from '@/components/ui/SectionHeading';
 import { FadeIn } from '@/components/ui/FadeIn';
 import { PageHero } from '@/components/shared/PageHero';
 import { buttonClasses } from '@/components/ui/Button';
+import { RewardsStatusBanner } from '@/components/rewards/RewardsStatusBanner';
 import { pricingConfig } from '@/lib/config';
 
 export const metadata: Metadata = {
@@ -63,10 +64,7 @@ export default function RewardsPage() {
           </div>
 
           <FadeIn delay={0.2}>
-            <div className="mt-12 rounded-xl2 border border-tbc-charcoal-border bg-tbc-charcoal-light p-6 text-center text-sm text-tbc-cream-muted">
-              Rewards are currently tracked on this device. Full customer accounts — with order
-              history and rewards that follow you anywhere — are coming soon.
-            </div>
+            <RewardsStatusBanner />
           </FadeIn>
 
           <div className="mt-10 text-center">

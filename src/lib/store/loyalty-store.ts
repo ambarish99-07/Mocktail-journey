@@ -2,7 +2,8 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { LoyaltyTier } from '@/types/order';
+
+export { deriveLoyaltyTier } from '@/lib/loyalty';
 
 interface LoyaltyState {
   completedOrderCount: number;
@@ -27,9 +28,3 @@ export const useLoyaltyStore = create<LoyaltyState>()(
     { name: 'tbc-loyalty-storage' }
   )
 );
-
-export function deriveLoyaltyTier(completedOrderCount: number, isGoldMember: boolean): LoyaltyTier {
-  if (isGoldMember || completedOrderCount >= 5) return 'gold';
-  if (completedOrderCount >= 1) return 'returning';
-  return 'first-order';
-}

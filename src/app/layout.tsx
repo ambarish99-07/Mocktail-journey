@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Playfair_Display, Manrope } from 'next/font/google';
+import { Toaster } from 'sonner';
 import './globals.css';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -90,6 +91,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main id="main-content">{children}</main>
         <Footer />
         <CartDrawer />
+        <Toaster theme="dark" position="top-center" richColors />
         <GoogleAnalytics />
         <MicrosoftClarity />
       </body>

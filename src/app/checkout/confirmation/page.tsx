@@ -1,21 +1,51 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle2 } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
 import { buttonClasses } from '@/components/ui/Button';
 import { CartSummary } from '@/components/cart/CartSummary';
 import { useOrderStore } from '@/lib/store/order-store';
+import type { PlacedOrder } from '@/types/order';
 
-export default function OrderConfirmationPage() {
+function ConfirmationContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const lastOrder = useOrderStore((s) => s.lastOrder);
+  const setLastOrder = useOrderStore((s) => s.setLastOrder);
+  const [fetchFailed, setFetchFailed] = useState(false);
+
+  const orderId = searchParams.get('order');
 
   useEffect(() => {
-    if (!lastOrder) router.replace('/');
-  }, [lastOrder, router]);
+    // Fast path: sessionStorage already has it (normal post-checkout navigation).
+    if (lastOrder) return;
+
+    // Refresh / deep-link: sessionStorage is empty, fall back to fetching by ID.
+    if (!orderId) {
+      router.replace('/');
+      return;
+    }
+
+    let cancelled = false;
+    fetch(`/api/orders/${orderId}`)
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then((body: { order: PlacedOrder }) => {
+        if (!cancelled) setLastOrder(body.order);
+      })
+      .catch(() => {
+        if (!cancelled) setFetchFailed(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [lastOrder, orderId, router, setLastOrder]);
+
+  useEffect(() => {
+    if (fetchFailed) router.replace('/');
+  }, [fetchFailed, router]);
 
   if (!lastOrder) return null;
 
@@ -31,7 +61,7 @@ export default function OrderConfirmationPage() {
       <div className="mt-8 w-full max-w-md rounded-xl2 border border-tbc-charcoal-border bg-tbc-charcoal-light p-6 text-left">
         <div className="flex items-center justify-between text-sm">
           <span className="text-tbc-cream-muted">Order ID</span>
-          <span className="font-semibold">{lastOrder.id}</span>
+          <span className="font-semibold">{lastOrder.orderNumber}</span>
         </div>
         <div className="mt-1 flex items-center justify-between text-sm">
           <span className="text-tbc-cream-muted">Estimated Delivery Time</span>
@@ -52,13 +82,24 @@ export default function OrderConfirmationPage() {
       </div>
 
       <p className="mt-6 text-xs text-tbc-cream-dim">
-        Order history, live tracking, and account sign-in are coming soon — save your Order ID for
-        reference.
+        Save your Order ID for reference. Signed-in customers can also view order history under{' '}
+        <Link href="/account" className="text-tbc-gold-400 hover:underline">
+          My Account
+        </Link>
+        .
       </p>
 
       <Link href="/menu" className={`${buttonClasses('gold', 'lg')} mt-8`}>
         Order More
       </Link>
     </Container>
+  );
+}
+
+export default function OrderConfirmationPage() {
+  return (
+    <Suspense>
+      <ConfirmationContent />
+    </Suspense>
   );
 }

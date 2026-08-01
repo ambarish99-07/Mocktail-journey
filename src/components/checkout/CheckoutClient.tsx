@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
 import { LocateFixed, MessageCircle, ShoppingBag } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
 import { Button, buttonClasses } from '@/components/ui/Button';
@@ -16,8 +17,12 @@ import { useOrderStore } from '@/lib/store/order-store';
 import { computeOrderTotals, ESTIMATED_DELIVERY_MINUTES } from '@/lib/pricing';
 import { checkoutSchema, type CheckoutFormValues } from '@/lib/validation';
 import { shareCurrentLocation, buildWhatsAppMessage, buildWhatsAppLink } from '@/lib/whatsapp';
-import { generateOrderId, cn } from '@/lib/utils';
+import { loadRazorpayScript } from '@/lib/razorpay-client';
+import { cn } from '@/lib/utils';
 import { FormField, inputClass } from '@/components/ui/FormField';
+import type { PlacedOrder } from '@/types/order';
+
+type PaymentMethod = 'cod' | 'razorpay';
 
 export function CheckoutClient() {
   const router = useRouter();
@@ -28,6 +33,8 @@ export function CheckoutClient() {
 
   const [locationStatus, setLocationStatus] = useState<'idle' | 'loading' | 'error'>('idle');
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cod');
+  const [isPaying, setIsPaying] = useState(false);
 
   const {
     register,
@@ -56,31 +63,87 @@ export function CheckoutClient() {
     }
   };
 
-  const onPlaceOrder = (data: CheckoutFormValues) => {
-    const order = {
-      id: generateOrderId(),
-      createdAt: new Date().toISOString(),
-      delivery: {
-        fullName: data.fullName,
-        phone: data.phone,
-        address: data.address,
-        city: data.city,
-        pincode: data.pincode,
-        mapsLink: data.mapsLink || undefined,
-        specialInstructions: data.specialInstructions || undefined,
-      },
-      totals,
-      estimatedMinutes: ESTIMATED_DELIVERY_MINUTES,
-    };
-
-    // TODO: replace with a real backend call once order intake API exists.
-    // eslint-disable-next-line no-console
-    console.log('New direct website order (placeholder — notify restaurant):', order);
-
+  const completeOrder = (order: PlacedOrder) => {
     setLastOrder(order);
     recordOrderCompleted();
     clearCart();
-    router.push('/checkout/confirmation');
+    router.push(`/checkout/confirmation?order=${order.id}`);
+  };
+
+  const onPlaceOrder = async (data: CheckoutFormValues) => {
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items, delivery: data, paymentMethod }),
+      });
+      const body = await res.json();
+      if (!res.ok) {
+        toast.error(body.error ?? 'Could not place your order. Please try again.');
+        return;
+      }
+
+      if (paymentMethod === 'cod') {
+        completeOrder(body.order as PlacedOrder);
+        return;
+      }
+
+      // Razorpay path: order is created but pending — open the payment sheet,
+      // and only complete the order (clear cart, navigate) once the server
+      // has verified the payment signature. Cart stays intact until then.
+      setIsPaying(true);
+      try {
+        await loadRazorpayScript();
+      } catch {
+        toast.error('Could not load the payment gateway. Please try again.');
+        return;
+      }
+
+      const pendingOrder: PlacedOrder = body.order;
+      const razorpay = new window.Razorpay!({
+        key: body.razorpay.keyId,
+        amount: body.razorpay.amount,
+        currency: body.razorpay.currency,
+        order_id: body.razorpay.orderId,
+        name: 'The Blenders Club',
+        description: `Order ${pendingOrder.orderNumber}`,
+        prefill: { name: data.fullName, contact: data.phone },
+        theme: { color: '#D4AF37' },
+        handler: async (response) => {
+          try {
+            const verifyRes = await fetch(`/api/orders/${pendingOrder.id}/verify-payment`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+              }),
+            });
+            const verifyBody = await verifyRes.json();
+            if (!verifyRes.ok) {
+              toast.error(verifyBody.error ?? 'Payment could not be verified. Please contact us with your order ID.');
+              return;
+            }
+            completeOrder(verifyBody.order as PlacedOrder);
+          } catch {
+            toast.error('Payment succeeded but verification failed. Please contact us with your order ID.');
+          } finally {
+            setIsPaying(false);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setIsPaying(false);
+            toast.error('Payment cancelled. Your cart has been kept — you can try again.');
+          },
+        },
+      });
+      razorpay.open();
+    } catch {
+      toast.error('Could not place your order. Please check your connection and try again.');
+      setIsPaying(false);
+    }
   };
 
   const handleWhatsAppOrder = async () => {
@@ -230,11 +293,50 @@ export function CheckoutClient() {
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-tbc-gold-400">
               Payment Method
             </h2>
-            <div className="rounded-xl2 border border-tbc-charcoal-border bg-tbc-charcoal-light p-4 text-sm text-tbc-cream-muted">
-              Pay on Delivery (Cash / UPI).
-              <span className="mt-1 block text-xs text-tbc-cream-dim">
-                Online payments (Razorpay / UPI) are coming soon.
-              </span>
+            <div className="space-y-2">
+              <label
+                className={cn(
+                  'flex cursor-pointer items-center gap-3 rounded-xl2 border p-4 text-sm transition-colors',
+                  paymentMethod === 'cod'
+                    ? 'border-tbc-gold-400 bg-tbc-charcoal-light'
+                    : 'border-tbc-charcoal-border bg-tbc-charcoal-light/50 hover:border-tbc-gold-400/40'
+                )}
+              >
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="cod"
+                  checked={paymentMethod === 'cod'}
+                  onChange={() => setPaymentMethod('cod')}
+                  className="h-4 w-4 accent-tbc-gold-400"
+                />
+                <span>
+                  Pay on Delivery
+                  <span className="block text-xs text-tbc-cream-dim">Cash or UPI at your door.</span>
+                </span>
+              </label>
+
+              <label
+                className={cn(
+                  'flex cursor-pointer items-center gap-3 rounded-xl2 border p-4 text-sm transition-colors',
+                  paymentMethod === 'razorpay'
+                    ? 'border-tbc-gold-400 bg-tbc-charcoal-light'
+                    : 'border-tbc-charcoal-border bg-tbc-charcoal-light/50 hover:border-tbc-gold-400/40'
+                )}
+              >
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="razorpay"
+                  checked={paymentMethod === 'razorpay'}
+                  onChange={() => setPaymentMethod('razorpay')}
+                  className="h-4 w-4 accent-tbc-gold-400"
+                />
+                <span>
+                  Pay Online
+                  <span className="block text-xs text-tbc-cream-dim">Cards, UPI, netbanking &amp; wallets via Razorpay.</span>
+                </span>
+              </label>
             </div>
           </section>
         </div>
@@ -262,8 +364,14 @@ export function CheckoutClient() {
             <strong className="text-tbc-cream">{ESTIMATED_DELIVERY_MINUTES} minutes</strong>
           </p>
 
-          <Button type="submit" variant="gold" size="lg" className="mt-6 w-full" disabled={isSubmitting}>
-            {isSubmitting ? 'Placing Order…' : 'Place Order Directly'}
+          <Button type="submit" variant="gold" size="lg" className="mt-6 w-full" disabled={isSubmitting || isPaying}>
+            {isPaying
+              ? 'Waiting for Payment…'
+              : isSubmitting
+                ? 'Placing Order…'
+                : paymentMethod === 'razorpay'
+                  ? 'Proceed to Payment'
+                  : 'Place Order Directly'}
           </Button>
 
           <Button

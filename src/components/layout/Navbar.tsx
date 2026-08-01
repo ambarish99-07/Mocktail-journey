@@ -4,11 +4,12 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, ShoppingCart, X } from 'lucide-react';
+import { Menu, ShoppingCart, User, X } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
 import { buttonClasses } from '@/components/ui/Button';
 import { navLinks } from '@/lib/config';
 import { useCartCount, useCartStore } from '@/lib/store/cart-store';
+import { useAuthStore } from '@/lib/store/auth-store';
 import { cn } from '@/lib/utils';
 
 export function Navbar() {
@@ -17,6 +18,13 @@ export function Navbar() {
   const pathname = usePathname();
   const cartCount = useCartCount();
   const openDrawer = useCartStore((s) => s.openDrawer);
+  const authUser = useAuthStore((s) => s.user);
+  const refreshAuth = useAuthStore((s) => s.refresh);
+
+  useEffect(() => {
+    refreshAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 8);
@@ -99,6 +107,14 @@ export function Navbar() {
                 </span>
               )}
             </button>
+
+            <Link
+              href={authUser ? '/account' : '/login'}
+              aria-label={authUser ? `Account, signed in as ${authUser.fullName}` : 'Sign in'}
+              className="relative flex h-10 w-10 items-center justify-center rounded-full border border-tbc-charcoal-border text-tbc-cream transition-colors hover:bg-tbc-charcoal-light"
+            >
+              <User className="h-5 w-5" aria-hidden="true" />
+            </Link>
 
             <button
               type="button"

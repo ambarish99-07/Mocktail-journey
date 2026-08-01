@@ -1,5 +1,22 @@
 import { z } from 'zod';
 
+export const signupSchema = z.object({
+  fullName: z.string().trim().min(2, 'Enter your full name'),
+  email: z.string().trim().toLowerCase().email('Enter a valid email'),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^[+]?[0-9]{10,13}$/, 'Enter a valid phone number'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+});
+export type SignupFormValues = z.infer<typeof signupSchema>;
+
+export const loginSchema = z.object({
+  email: z.string().trim().toLowerCase().email('Enter a valid email'),
+  password: z.string().min(1, 'Enter your password'),
+});
+export type LoginFormValues = z.infer<typeof loginSchema>;
+
 /** The Blenders Club is delivery-only (cloud kitchen, no dine-in/pickup) — delivery details are always required. */
 export const checkoutSchema = z.object({
   fullName: z.string().trim().min(2, 'Enter your full name'),
