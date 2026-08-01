@@ -86,15 +86,6 @@ const config: Config = {
           '50%': { transform: 'translateY(-10px)' },
         },
       },
-      container: {
-        center: true,
-        padding: {
-          DEFAULT: '1.25rem',
-          sm: '2rem',
-          lg: '4rem',
-          xl: '5rem',
-        },
-      },
     },
   },
   plugins: [],

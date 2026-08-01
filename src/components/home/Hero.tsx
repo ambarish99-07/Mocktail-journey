@@ -36,7 +36,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="max-w-2xl text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl"
+          className="max-w-3xl text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl 2xl:text-7xl"
         >
           {siteConfig.tagline}
         </motion.h1>
@@ -45,7 +45,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="mt-5 max-w-lg text-lg text-tbc-cream-muted"
+          className="mt-5 max-w-xl text-lg text-tbc-cream-muted 2xl:text-xl"
         >
           {siteConfig.description}
         </motion.p>

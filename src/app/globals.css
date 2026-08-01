@@ -46,8 +46,15 @@
 }
 
 @layer components {
+  /*
+   * Custom container instead of Tailwind's `.container` core utility —
+   * the core utility's max-width is pinned to whichever breakpoint last
+   * matched (1280px at the xl breakpoint and up), which reads as a narrow
+   * column with large dead margins on wide/ultrawide monitors. This scales
+   * padding the same way but keeps growing up to 1680px.
+   */
   .container-tbc {
-    @apply container mx-auto max-w-7xl;
+    @apply mx-auto w-full max-w-[1680px] px-5 sm:px-8 lg:px-16 xl:px-20;
   }
 
   /* Skip-to-content link, visible only on keyboard focus */

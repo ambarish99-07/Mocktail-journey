@@ -47,7 +47,7 @@ export function Navbar() {
             The <span className="text-gold-gradient">Blenders</span> Club
           </Link>
 
-          <ul className="hidden items-center gap-7 lg:flex">
+          <ul className="hidden items-center gap-7 lg:flex xl:gap-9">
             {navLinks.map((link) => (
               <li key={link.href}>
                 <Link
