@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { MessageCircle, ShoppingBag, UtensilsCrossed, Bike } from 'lucide-react';
+import { MessageCircle, ShoppingBag } from 'lucide-react';
 import { Button, buttonClasses } from '@/components/ui/Button';
+import { ZomatoIcon, SwiggyIcon } from '@/components/icons/BrandIcons';
 import { buildWhatsAppLink } from '@/lib/whatsapp';
 import { openSwiggy, openZomato } from '@/lib/order-links';
 import { cn } from '@/lib/utils';
@@ -43,13 +44,13 @@ export function OrderChannelButtons({ className, compact = false }: OrderChannel
         WhatsApp
       </Button>
 
-      <Button variant="outline" size={compact ? 'sm' : 'md'} className="order-3" onClick={openZomato}>
-        <UtensilsCrossed className="h-5 w-5" aria-hidden="true" />
+      <Button variant="zomato" size={compact ? 'sm' : 'md'} className="order-3" onClick={openZomato}>
+        <ZomatoIcon className="h-5 w-5" aria-hidden="true" />
         Zomato
       </Button>
 
-      <Button variant="outline" size={compact ? 'sm' : 'md'} className="order-4" onClick={openSwiggy}>
-        <Bike className="h-5 w-5" aria-hidden="true" />
+      <Button variant="swiggy" size={compact ? 'sm' : 'md'} className="order-4" onClick={openSwiggy}>
+        <SwiggyIcon className="h-5 w-5" aria-hidden="true" />
         Swiggy
       </Button>
     </div>
