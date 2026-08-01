@@ -27,7 +27,9 @@ export const storeConfig = {
     'Chaturi Nagar Road, Rampati Nagari, New Chamman Chak, Beside Gyan Ganga Trade Centre, Bypass Road, Patna, Bihar',
   phone: process.env.NEXT_PUBLIC_STORE_PHONE || '+91 8456978290',
   email: process.env.NEXT_PUBLIC_STORE_EMAIL || 'hello@theblendersclub.com',
-  googleMapsUrl: process.env.NEXT_PUBLIC_GOOGLE_MAPS_URL || 'https://maps.google.com/',
+  googleMapsUrl:
+    process.env.NEXT_PUBLIC_GOOGLE_MAPS_URL ||
+    'https://www.google.com/maps/search/?api=1&query=Chaturi+Nagar+Road%2C+Rampati+Nagari%2C+New+Chamman+Chak%2C+Beside+Gyan+Ganga+Trade+Centre%2C+Bypass+Road%2C+Patna%2C+Bihar',
   openingHours: '12:00 PM – 12:00 AM, all days (delivery hours)',
 } as const;
 
