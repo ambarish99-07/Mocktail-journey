@@ -22,11 +22,13 @@ export const orderingConfig = {
 
 /** The Blenders Club is a delivery-only cloud kitchen — no walk-in/dine-in at this address. */
 export const storeConfig = {
-  address: process.env.NEXT_PUBLIC_STORE_ADDRESS || 'Cloud Kitchen Unit 4, Industrial Estate, Your City',
-  phone: process.env.NEXT_PUBLIC_STORE_PHONE || '+91XXXXXXXXXX',
+  address:
+    process.env.NEXT_PUBLIC_STORE_ADDRESS ||
+    'Chaturi Nagar Road, Rampati Nagari, New Chamman Chak, Beside Gyan Ganga Trade Centre, Bypass Road, Patna, Bihar',
+  phone: process.env.NEXT_PUBLIC_STORE_PHONE || '+91 8456978290',
   email: process.env.NEXT_PUBLIC_STORE_EMAIL || 'hello@theblendersclub.com',
   googleMapsUrl: process.env.NEXT_PUBLIC_GOOGLE_MAPS_URL || 'https://maps.google.com/',
-  openingHours: '11:00 AM – 11:00 PM, all days (delivery hours)',
+  openingHours: '12:00 PM – 12:00 AM, all days (delivery hours)',
 } as const;
 
 export const analyticsConfig = {

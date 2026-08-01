@@ -68,7 +68,7 @@ function LocalBusinessJsonLd() {
     },
     servesCuisine: ['Shakes', 'Cold Coffee', 'Beverages'],
     priceRange: '₹₹',
-    openingHours: 'Mo-Su 11:00-23:00',
+    openingHours: 'Mo-Su 12:00-24:00',
     hasDeliveryMethod: 'https://schema.org/DeliveryModeDirect',
     acceptsReservations: false,
   };
