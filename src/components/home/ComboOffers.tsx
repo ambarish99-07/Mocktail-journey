@@ -1,11 +1,14 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import { Container } from '@/components/ui/Container';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { FadeIn } from '@/components/ui/FadeIn';
 import { Button } from '@/components/ui/Button';
-import { fixedCombos } from '@/data/combos';
+import { ChooseComboModal } from '@/components/menu/ChooseComboModal';
+import { fixedCombos, chooseNCombos } from '@/data/combos';
+import type { ChooseNCombo } from '@/data/combos';
 import { getMenuItemById } from '@/data/menu';
 import { useCartStore } from '@/lib/store/cart-store';
 import { DEFAULT_CUSTOMIZATION } from '@/types/cart';
@@ -13,6 +16,7 @@ import { formatCurrency } from '@/lib/utils';
 
 export function ComboOffers() {
   const addItem = useCartStore((s) => s.addItem);
+  const [buildingCombo, setBuildingCombo] = useState<ChooseNCombo | null>(null);
 
   const addComboToCart = (itemIds: string[]) => {
     itemIds.forEach((id) => {
@@ -36,8 +40,16 @@ export function ComboOffers() {
           {fixedCombos.map((combo, i) => (
             <FadeIn key={combo.id} delay={i * 0.08}>
               <div className="flex h-full flex-col overflow-hidden rounded-xl2 border border-tbc-charcoal-border bg-tbc-charcoal-light">
-                <div className="relative h-40 w-full">
-                  <Image src={combo.image} alt={combo.name} fill sizes="400px" className="object-cover" />
+                <div className="grid h-40 w-full grid-cols-2 gap-0.5">
+                  {combo.itemIds.map((itemId) => {
+                    const item = getMenuItemById(itemId);
+                    if (!item) return null;
+                    return (
+                      <div key={itemId} className="relative h-full w-full">
+                        <Image src={item.image} alt={item.signatureName} fill sizes="200px" className="object-cover" />
+                      </div>
+                    );
+                  })}
                 </div>
                 <div className="flex flex-1 flex-col p-5">
                   <h3 className="font-heading text-lg font-semibold">{combo.name}</h3>
@@ -54,8 +66,27 @@ export function ComboOffers() {
               </div>
             </FadeIn>
           ))}
+
+          {chooseNCombos.map((combo, i) => (
+            <FadeIn key={combo.id} delay={(fixedCombos.length + i) * 0.08}>
+              <div className="flex h-full flex-col overflow-hidden rounded-xl2 border border-tbc-gold-400/30 bg-tbc-charcoal-light p-5">
+                <h3 className="font-heading text-lg font-semibold">{combo.name}</h3>
+                <p className="mt-1.5 flex-1 text-sm text-tbc-cream-muted">{combo.description}</p>
+                <div className="mt-4 flex items-center justify-between">
+                  <span className="text-lg font-bold text-tbc-gold-400">
+                    {formatCurrency(combo.comboPrice)}
+                  </span>
+                  <Button variant="gold" size="sm" onClick={() => setBuildingCombo(combo)}>
+                    Build Combo
+                  </Button>
+                </div>
+              </div>
+            </FadeIn>
+          ))}
         </div>
       </Container>
+
+      <ChooseComboModal combo={buildingCombo} onClose={() => setBuildingCombo(null)} />
     </section>
   );
 }

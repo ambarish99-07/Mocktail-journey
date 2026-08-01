@@ -121,8 +121,16 @@ export function MenuPageClient() {
                 key={combo.id}
                 className="flex flex-col overflow-hidden rounded-xl2 border border-tbc-charcoal-border bg-tbc-charcoal-light"
               >
-                <div className="relative h-36 w-full">
-                  <Image src={combo.image} alt={combo.name} fill sizes="400px" className="object-cover" />
+                <div className="grid h-36 w-full grid-cols-2 gap-0.5">
+                  {combo.itemIds.map((itemId) => {
+                    const item = getMenuItemById(itemId);
+                    if (!item) return null;
+                    return (
+                      <div key={itemId} className="relative h-full w-full">
+                        <Image src={item.image} alt={item.signatureName} fill sizes="200px" className="object-cover" />
+                      </div>
+                    );
+                  })}
                 </div>
                 <div className="flex flex-1 flex-col p-5">
                   <h3 className="font-heading text-lg font-semibold">{combo.name}</h3>

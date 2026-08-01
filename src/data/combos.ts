@@ -4,7 +4,6 @@ export interface FixedCombo {
   description: string;
   itemIds: string[];
   comboPrice: number;
-  image: string;
 }
 
 export interface ChooseNCombo {
@@ -25,7 +24,6 @@ export const fixedCombos: FixedCombo[] = [
     description: 'Choco Crush + Choco Crunch Blast — double the chocolate indulgence.',
     itemIds: ['choco-crush', 'choco-crunch-blast'],
     comboPrice: 399,
-    image: 'https://images.unsplash.com/photo-1653085315536-1379bc836161?w=800&q=80',
   },
   {
     id: 'crunch-lovers',
@@ -33,7 +31,6 @@ export const fixedCombos: FixedCombo[] = [
     description: 'Wafer Wonder + Golden Crunch — for those who love texture in every sip.',
     itemIds: ['wafer-wonder', 'golden-crunch'],
     comboPrice: 419,
-    image: 'https://images.unsplash.com/photo-1555411093-41f7864ed3a2?w=800&q=80',
   },
   {
     id: 'coffee-combo',
@@ -41,7 +38,6 @@ export const fixedCombos: FixedCombo[] = [
     description: 'Coffee Chill + Mocha Magic — a chilled coffee duo to share or savour solo.',
     itemIds: ['coffee-chill', 'mocha-magic'],
     comboPrice: 369,
-    image: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=800&q=80',
   },
   {
     id: 'fruit-delight',
@@ -49,7 +45,6 @@ export const fixedCombos: FixedCombo[] = [
     description: 'Mango Magic + Berry Bloom — fresh, fruity and refreshingly light.',
     itemIds: ['mango-magic', 'berry-bloom'],
     comboPrice: 379,
-    image: 'https://images.unsplash.com/photo-1546173159-315724a31696?w=800&q=80',
   },
   {
     id: 'premium-duo',
@@ -57,7 +52,6 @@ export const fixedCombos: FixedCombo[] = [
     description: 'Saffron Gold + Hazelnut Heaven — our most indulgent pairing.',
     itemIds: ['saffron-gold', 'hazelnut-heaven'],
     comboPrice: 449,
-    image: 'https://images.unsplash.com/photo-1696487773677-c0c8061fe3d2?w=800&q=80',
   },
 ];
 
