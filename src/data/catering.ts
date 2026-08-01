@@ -28,7 +28,7 @@ export const cateringPackages: CateringPackage[] = [
     description: 'A compact shake bar setup, perfect for smaller gatherings.',
     startingPrice: 'From ₹99 / guest',
     bestFor: 'Up to 30 guests',
-    inclusions: ['3 signature shake flavours', 'Standard cups & straws', '2-hour service window'],
+    inclusions: ['2 signature shake flavours', 'Standard cups & straws', '2-hour service window'],
   },
   {
     id: 'classic',
@@ -36,7 +36,7 @@ export const cateringPackages: CateringPackage[] = [
     description: 'Our most popular catering package with a fuller flavour lineup.',
     startingPrice: 'From ₹129 / guest',
     bestFor: 'Up to 75 guests',
-    inclusions: ['5 signature shakes + cold coffee', 'Branded cups', 'On-site blending station', '3-hour service window'],
+    inclusions: ['3 signature shakes + cold coffee', 'Branded cups', 'On-site blending station', '3-hour service window'],
   },
   {
     id: 'premium',
@@ -45,7 +45,7 @@ export const cateringPackages: CateringPackage[] = [
     startingPrice: 'From ₹169 / guest',
     bestFor: '75+ guests',
     inclusions: [
-      'Full menu access + live add-ons bar',
+      '5+1 signature shakes',
       'Dedicated staff & branded setup',
       'Custom flavour for the occasion',
       '4-hour service window',
