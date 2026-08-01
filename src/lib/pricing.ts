@@ -38,7 +38,7 @@ export function loyaltyDiscountPercent(tier: LoyaltyTier | null): number {
  */
 export function computeOrderTotals(
   items: CartItem[],
-  options: { fulfilment: 'delivery' | 'pickup'; loyaltyTier?: LoyaltyTier | null }
+  options: { loyaltyTier?: LoyaltyTier | null } = {}
 ): OrderTotals {
   const subtotal = cartSubtotal(items);
 
@@ -50,10 +50,7 @@ export function computeOrderTotals(
   const websiteDiscount = loyaltyDiscountAmount > websiteDiscountAmount ? 0 : bestDiscount;
   const loyaltyDiscount = loyaltyDiscountAmount > websiteDiscountAmount ? bestDiscount : 0;
 
-  const deliveryFee =
-    options.fulfilment === 'pickup' || subtotal >= pricingConfig.freeDeliveryThreshold
-      ? 0
-      : pricingConfig.deliveryFee;
+  const deliveryFee = subtotal >= pricingConfig.freeDeliveryThreshold ? 0 : pricingConfig.deliveryFee;
 
   const taxableAmount = subtotal - bestDiscount;
   const tax = Math.round((taxableAmount * pricingConfig.taxRatePercent) / 100);
@@ -70,6 +67,5 @@ export function computeOrderTotals(
   };
 }
 
-export function estimatedDeliveryMinutes(fulfilment: 'delivery' | 'pickup'): number {
-  return fulfilment === 'pickup' ? 12 : 35;
-}
+/** Estimated delivery time — The Blenders Club is delivery-only, no pickup/dine-in. */
+export const ESTIMATED_DELIVERY_MINUTES = 35;

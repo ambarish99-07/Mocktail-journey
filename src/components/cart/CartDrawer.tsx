@@ -33,7 +33,7 @@ export function CartDrawer() {
     };
   }, [isOpen, closeDrawer]);
 
-  const totals = computeOrderTotals(items, { fulfilment: 'delivery' });
+  const totals = computeOrderTotals(items);
 
   return (
     <AnimatePresence>

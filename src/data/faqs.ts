@@ -36,9 +36,9 @@ export const faqs: Faq[] = [
   },
   {
     id: 'f5',
-    question: 'Do you offer delivery or only pickup?',
+    question: 'Is there a store I can walk into, or is it delivery only?',
     answer:
-      'Both. Choose delivery or pickup at checkout — delivery fees and estimated times are shown before you confirm your order.',
+      'The Blenders Club is a delivery-only cloud kitchen — we don’t have walk-in or dine-in seating. Every order is freshly blended and delivered to your door; delivery fees and estimated times are shown before you confirm your order.',
     category: 'ordering',
   },
   {

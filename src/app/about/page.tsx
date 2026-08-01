@@ -16,7 +16,7 @@ const values = [
   { title: 'Quality First', description: 'Real ingredients, sourced with care, blended fresh for every single order.' },
   { title: 'Craft & Creativity', description: 'Every recipe is developed and tasted until it earns the Blenders Club name.' },
   { title: 'Customer Obsession', description: 'From the menu to the checkout, every detail is designed around you.' },
-  { title: 'Consistent Excellence', description: 'The same premium experience, every store, every order, every time.' },
+  { title: 'Consistent Excellence', description: 'The same premium experience, every kitchen, every order, every time.' },
 ];
 
 export default function AboutPage() {
@@ -34,7 +34,7 @@ export default function AboutPage() {
             <div className="relative aspect-[4/3] overflow-hidden rounded-xl2">
               <Image
                 src="https://images.unsplash.com/photo-1600093463592-8e36ae95ef56?w=1000&q=80"
-                alt="The Blenders Club store ambience"
+                alt="Behind the scenes at The Blenders Club"
                 fill
                 sizes="(min-width: 1024px) 50vw, 100vw"
                 className="object-cover"
@@ -42,11 +42,12 @@ export default function AboutPage() {
             </div>
           </FadeIn>
           <FadeIn delay={0.1}>
-            <h2 className="text-3xl font-semibold sm:text-4xl">A Premium Shake Bar, Reimagined</h2>
+            <h2 className="text-3xl font-semibold sm:text-4xl">A Premium Cloud Kitchen, Reimagined</h2>
             <p className="mt-4 text-tbc-cream-muted">
               What started as a pursuit of the perfect shake has grown into a brand built around
-              quality, creativity, and an obsession with the customer experience. Every drink on
-              our menu is blended fresh to order — never pre-made, never rushed.
+              quality, creativity, and an obsession with the customer experience. We&apos;re a
+              delivery-only cloud kitchen — every drink on our menu is blended fresh to order the
+              moment it&apos;s placed, never pre-made, never rushed, and sent straight to your door.
             </p>
             <p className="mt-4 text-tbc-cream-muted">
               Today, The Blenders Club serves signature shakes and cold coffees designed to feel

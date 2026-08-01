@@ -10,16 +10,14 @@ import { LocateFixed, MessageCircle, ShoppingBag } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
 import { Button, buttonClasses } from '@/components/ui/Button';
 import { CartSummary } from '@/components/cart/CartSummary';
-import { FulfilmentToggle } from '@/components/checkout/FulfilmentToggle';
 import { useCartStore } from '@/lib/store/cart-store';
 import { useLoyaltyStore, deriveLoyaltyTier } from '@/lib/store/loyalty-store';
 import { useOrderStore } from '@/lib/store/order-store';
-import { computeOrderTotals, estimatedDeliveryMinutes } from '@/lib/pricing';
+import { computeOrderTotals, ESTIMATED_DELIVERY_MINUTES } from '@/lib/pricing';
 import { checkoutSchema, type CheckoutFormValues } from '@/lib/validation';
 import { shareCurrentLocation, buildWhatsAppMessage, buildWhatsAppLink } from '@/lib/whatsapp';
 import { generateOrderId, cn } from '@/lib/utils';
 import { FormField, inputClass } from '@/components/ui/FormField';
-import type { FulfilmentType } from '@/types/order';
 
 export function CheckoutClient() {
   const router = useRouter();
@@ -34,19 +32,16 @@ export function CheckoutClient() {
   const {
     register,
     handleSubmit,
-    watch,
     setValue,
     trigger,
     getValues,
     formState: { errors, isSubmitting },
   } = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
-    defaultValues: { fulfilment: 'delivery' },
   });
 
-  const fulfilment = watch('fulfilment');
   const loyaltyTier = deriveLoyaltyTier(completedOrderCount, isGoldMember);
-  const totals = computeOrderTotals(items, { fulfilment, loyaltyTier });
+  const totals = computeOrderTotals(items, { loyaltyTier });
 
   const handleShareLocation = async () => {
     setLocationStatus('loading');
@@ -65,21 +60,17 @@ export function CheckoutClient() {
     const order = {
       id: generateOrderId(),
       createdAt: new Date().toISOString(),
-      fulfilment: data.fulfilment,
-      delivery:
-        data.fulfilment === 'delivery'
-          ? {
-              fullName: data.fullName,
-              phone: data.phone,
-              address: data.address || '',
-              city: data.city || '',
-              pincode: data.pincode || '',
-              mapsLink: data.mapsLink || undefined,
-              specialInstructions: data.specialInstructions || undefined,
-            }
-          : null,
+      delivery: {
+        fullName: data.fullName,
+        phone: data.phone,
+        address: data.address,
+        city: data.city,
+        pincode: data.pincode,
+        mapsLink: data.mapsLink || undefined,
+        specialInstructions: data.specialInstructions || undefined,
+      },
       totals,
-      estimatedMinutes: estimatedDeliveryMinutes(data.fulfilment),
+      estimatedMinutes: ESTIMATED_DELIVERY_MINUTES,
     };
 
     // TODO: replace with a real backend call once order intake API exists.
@@ -96,9 +87,7 @@ export function CheckoutClient() {
     const valid = await trigger(['fullName', 'phone', 'address']);
     if (!valid) return;
     const data = getValues();
-    const fullAddress = data.address
-      ? [data.address, data.city, data.pincode].filter(Boolean).join(', ')
-      : '(pickup — no address)';
+    const fullAddress = [data.address, data.city, data.pincode].filter(Boolean).join(', ');
     const message = buildWhatsAppMessage({
       customerName: data.fullName,
       phone: data.phone,
@@ -136,18 +125,12 @@ export function CheckoutClient() {
         <div className="space-y-8">
           <section>
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-tbc-gold-400">
-              Fulfilment
+              Delivery Details
             </h2>
-            <FulfilmentToggle
-              value={fulfilment}
-              onChange={(v: FulfilmentType) => setValue('fulfilment', v, { shouldValidate: true })}
-            />
-          </section>
-
-          <section>
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-tbc-gold-400">
-              Your Details
-            </h2>
+            <p className="mb-4 text-xs text-tbc-cream-dim">
+              The Blenders Club is a delivery-only cloud kitchen — every order is freshly blended
+              and delivered to your door.
+            </p>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField id="checkout-full-name" label="Full Name" error={errors.fullName?.message}>
                 <input
@@ -169,80 +152,78 @@ export function CheckoutClient() {
               </FormField>
             </div>
 
-            {fulfilment === 'delivery' && (
-              <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <FormField
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <FormField
+                id="checkout-address"
+                label="Delivery Address"
+                error={errors.address?.message}
+                className="sm:col-span-2"
+              >
+                <input
                   id="checkout-address"
-                  label="Delivery Address"
-                  error={errors.address?.message}
-                  className="sm:col-span-2"
+                  {...register('address')}
+                  className={inputClass}
+                  autoComplete="street-address"
+                  placeholder="House / street / landmark"
+                />
+              </FormField>
+              <FormField id="checkout-city" label="City" error={errors.city?.message}>
+                <input
+                  id="checkout-city"
+                  {...register('city')}
+                  className={inputClass}
+                  autoComplete="address-level2"
+                />
+              </FormField>
+              <FormField id="checkout-pincode" label="Pincode" error={errors.pincode?.message}>
+                <input
+                  id="checkout-pincode"
+                  {...register('pincode')}
+                  className={inputClass}
+                  autoComplete="postal-code"
+                />
+              </FormField>
+
+              <div className="sm:col-span-2">
+                <button
+                  type="button"
+                  onClick={handleShareLocation}
+                  disabled={locationStatus === 'loading'}
+                  className="flex items-center gap-2 text-sm font-medium text-tbc-emerald-400 hover:underline disabled:opacity-60"
                 >
-                  <input
-                    id="checkout-address"
-                    {...register('address')}
-                    className={inputClass}
-                    autoComplete="street-address"
-                    placeholder="House / street / landmark"
-                  />
-                </FormField>
-                <FormField id="checkout-city" label="City" error={errors.city?.message}>
-                  <input
-                    id="checkout-city"
-                    {...register('city')}
-                    className={inputClass}
-                    autoComplete="address-level2"
-                  />
-                </FormField>
-                <FormField id="checkout-pincode" label="Pincode" error={errors.pincode?.message}>
-                  <input
-                    id="checkout-pincode"
-                    {...register('pincode')}
-                    className={inputClass}
-                    autoComplete="postal-code"
-                  />
-                </FormField>
-
-                <div className="sm:col-span-2">
-                  <button
-                    type="button"
-                    onClick={handleShareLocation}
-                    disabled={locationStatus === 'loading'}
-                    className="flex items-center gap-2 text-sm font-medium text-tbc-emerald-400 hover:underline disabled:opacity-60"
-                  >
-                    <LocateFixed className="h-4 w-4" aria-hidden="true" />
-                    {locationStatus === 'loading' ? 'Getting your location…' : 'Share Delivery Location'}
-                  </button>
-                  {locationError && <p className="mt-1.5 text-xs text-amber-400">{locationError}</p>}
-                  <FormField
-                    id="checkout-maps-link"
-                    label="Google Maps Link (optional)"
-                    error={errors.mapsLink?.message}
-                    className="mt-2"
-                  >
-                    <input
-                      id="checkout-maps-link"
-                      {...register('mapsLink')}
-                      className={inputClass}
-                      placeholder="https://maps.google.com/?q=..."
-                    />
-                  </FormField>
-                </div>
-
+                  <LocateFixed className="h-4 w-4" aria-hidden="true" />
+                  {locationStatus === 'loading' ? 'Getting your location…' : 'Share Delivery Location'}
+                </button>
+                {locationError && <p className="mt-1.5 text-xs text-amber-400">{locationError}</p>}
                 <FormField
-                  id="checkout-instructions"
-                  label="Special Instructions (optional)"
-                  error={errors.specialInstructions?.message}
-                  className="sm:col-span-2"
+                  id="checkout-maps-link"
+                  label="Google Maps Link (optional)"
+                  error={errors.mapsLink?.message}
+                  className="mt-2"
                 >
-                  <textarea
-                    id="checkout-instructions"
-                    {...register('specialInstructions')}
-                    className={cn(inputClass, 'min-h-[80px] resize-y')}
-                    placeholder="E.g. less sugar, ring the bell twice..."
+                  <input
+                    id="checkout-maps-link"
+                    {...register('mapsLink')}
+                    className={inputClass}
+                    placeholder="https://maps.google.com/?q=..."
                   />
                 </FormField>
               </div>
-            )}
+
+              <FormField
+                id="checkout-instructions"
+                label="Special Instructions (optional)"
+                error={errors.specialInstructions?.message}
+                className="sm:col-span-2"
+              >
+                <textarea
+                  id="checkout-instructions"
+                  {...register('specialInstructions')}
+                  className={cn(inputClass, 'min-h-[80px] resize-y')}
+                  placeholder="E.g. less sugar, ring the bell twice..."
+                />
+              </FormField>
+            </div>
           </section>
 
           <section>
@@ -250,7 +231,7 @@ export function CheckoutClient() {
               Payment Method
             </h2>
             <div className="rounded-xl2 border border-tbc-charcoal-border bg-tbc-charcoal-light p-4 text-sm text-tbc-cream-muted">
-              Pay on {fulfilment === 'delivery' ? 'Delivery' : 'Pickup'} (Cash / UPI at the counter).
+              Pay on Delivery (Cash / UPI).
               <span className="mt-1 block text-xs text-tbc-cream-dim">
                 Online payments (Razorpay / UPI) are coming soon.
               </span>
@@ -277,10 +258,8 @@ export function CheckoutClient() {
           <CartSummary totals={totals} />
 
           <p className="mt-4 text-xs text-tbc-cream-dim">
-            Estimated {fulfilment === 'delivery' ? 'delivery' : 'pickup'} time:{' '}
-            <strong className="text-tbc-cream">
-              {estimatedDeliveryMinutes(fulfilment)} minutes
-            </strong>
+            Estimated delivery time:{' '}
+            <strong className="text-tbc-cream">{ESTIMATED_DELIVERY_MINUTES} minutes</strong>
           </p>
 
           <Button type="submit" variant="gold" size="lg" className="mt-6 w-full" disabled={isSubmitting}>

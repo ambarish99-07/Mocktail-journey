@@ -37,15 +37,16 @@ export default function TermsPage() {
 
             <h2>3. Payment</h2>
             <p>
-              At present, orders are payable on delivery or pickup (cash/UPI). Online payment options
-              will be added in a future update and will be governed by the payment processor&apos;s terms
-              at that time.
+              At present, orders are payable on delivery (cash/UPI). Online payment options will be
+              added in a future update and will be governed by the payment processor&apos;s terms at
+              that time.
             </p>
 
-            <h2>4. Delivery & Pickup</h2>
+            <h2>4. Delivery</h2>
             <p>
-              Estimated delivery and pickup times shown at checkout are approximate and may vary due
-              to demand, weather, or circumstances beyond our control.
+              {siteConfig.brandName} is a delivery-only cloud kitchen — we do not offer walk-in or
+              dine-in service. Estimated delivery times shown at checkout are approximate and may
+              vary due to demand, weather, or circumstances beyond our control.
             </p>
 
             <h2>5. Rewards Program</h2>

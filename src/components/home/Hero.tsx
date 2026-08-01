@@ -29,7 +29,7 @@ export function Hero() {
           transition={{ duration: 0.5 }}
           className="mb-5 inline-block rounded-full border border-tbc-gold-400/40 bg-tbc-black/40 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-tbc-gold-400 backdrop-blur-sm"
         >
-          Premium Shake Bar
+          Premium Cloud Kitchen
         </motion.span>
 
         <motion.h1

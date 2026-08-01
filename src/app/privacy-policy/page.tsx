@@ -36,7 +36,7 @@ export default function PrivacyPolicyPage() {
 
             <h2>2. How We Use Your Information</h2>
             <ul>
-              <li>To process and fulfil your orders (delivery or pickup).</li>
+              <li>To process and deliver your orders.</li>
               <li>To communicate order updates, confirmations, and support responses.</li>
               <li>To operate our Rewards program and apply eligible discounts.</li>
               <li>To respond to catering and franchise enquiries.</li>

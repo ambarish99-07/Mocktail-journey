@@ -20,12 +20,13 @@ export const orderingConfig = {
   swiggyAppScheme: process.env.NEXT_PUBLIC_SWIGGY_APP_SCHEME || '',
 } as const;
 
+/** The Blenders Club is a delivery-only cloud kitchen — no walk-in/dine-in at this address. */
 export const storeConfig = {
-  address: process.env.NEXT_PUBLIC_STORE_ADDRESS || 'Shop 12, Premium High Street, Your City',
+  address: process.env.NEXT_PUBLIC_STORE_ADDRESS || 'Cloud Kitchen Unit 4, Industrial Estate, Your City',
   phone: process.env.NEXT_PUBLIC_STORE_PHONE || '+91XXXXXXXXXX',
   email: process.env.NEXT_PUBLIC_STORE_EMAIL || 'hello@theblendersclub.com',
   googleMapsUrl: process.env.NEXT_PUBLIC_GOOGLE_MAPS_URL || 'https://maps.google.com/',
-  openingHours: '11:00 AM – 11:00 PM, all days',
+  openingHours: '11:00 AM – 11:00 PM, all days (delivery hours)',
 } as const;
 
 export const analyticsConfig = {

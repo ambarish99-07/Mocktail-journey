@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     'cold coffee',
     'milkshake delivery',
     'The Blenders Club',
-    'shake bar near me',
+    'cloud kitchen shake delivery',
   ],
   openGraph: {
     type: 'website',
@@ -52,9 +52,11 @@ export const metadata: Metadata = {
 };
 
 function LocalBusinessJsonLd() {
+  // FoodEstablishment (not CafeOrCoffeeShop) — The Blenders Club is a
+  // delivery-only cloud kitchen with no dine-in/walk-in service.
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'CafeOrCoffeeShop',
+    '@type': 'FoodEstablishment',
     name: siteConfig.brandName,
     description: siteConfig.description,
     url: siteConfig.url,
@@ -67,6 +69,8 @@ function LocalBusinessJsonLd() {
     servesCuisine: ['Shakes', 'Cold Coffee', 'Beverages'],
     priceRange: '₹₹',
     openingHours: 'Mo-Su 11:00-23:00',
+    hasDeliveryMethod: 'https://schema.org/DeliveryModeDirect',
+    acceptsReservations: false,
   };
 
   return (

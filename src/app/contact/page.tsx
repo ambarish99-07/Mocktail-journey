@@ -7,7 +7,7 @@ import { storeConfig } from '@/lib/config';
 
 export const metadata: Metadata = {
   title: 'Contact Us',
-  description: 'Get in touch with The Blenders Club — store location, phone, email, and a direct contact form.',
+  description: 'Get in touch with The Blenders Club — a delivery-only cloud kitchen. Kitchen location, phone, email, and a direct contact form.',
   alternates: { canonical: '/contact' },
 };
 
@@ -19,7 +19,11 @@ export default function ContactPage() {
       <section className="py-16">
         <Container className="grid grid-cols-1 gap-12 lg:grid-cols-[1fr_1.2fr]">
           <div>
-            <h2 className="text-xl font-semibold">Visit or Reach Us</h2>
+            <h2 className="text-xl font-semibold">Reach Us</h2>
+            <p className="mt-1.5 text-sm text-tbc-cream-dim">
+              We&apos;re a delivery-only cloud kitchen — no walk-in ordering or dine-in seating at
+              this location.
+            </p>
             <ul className="mt-5 space-y-4 text-sm text-tbc-cream-muted">
               <li className="flex items-start gap-3">
                 <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-tbc-gold-400" aria-hidden="true" />
@@ -50,7 +54,7 @@ export default function ContactPage() {
               className="mt-6 block overflow-hidden rounded-xl2 border border-tbc-charcoal-border"
             >
               <div className="flex h-48 items-center justify-center bg-tbc-charcoal-light text-sm text-tbc-cream-dim">
-                View on Google Maps →
+                Our Kitchen Location →
               </div>
             </a>
           </div>

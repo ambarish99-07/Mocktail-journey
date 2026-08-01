@@ -1,5 +1,3 @@
-export type FulfilmentType = 'delivery' | 'pickup';
-
 export type LoyaltyTier = 'first-order' | 'returning' | 'gold';
 
 export interface DeliveryDetails {
@@ -21,11 +19,11 @@ export interface OrderTotals {
   total: number;
 }
 
+/** The Blenders Club is a delivery-only cloud kitchen — every order ships with delivery details, no pickup/dine-in option. */
 export interface PlacedOrder {
   id: string;
   createdAt: string;
-  fulfilment: FulfilmentType;
-  delivery: DeliveryDetails | null;
+  delivery: DeliveryDetails;
   totals: OrderTotals;
   estimatedMinutes: number;
 }

@@ -20,7 +20,7 @@ export default function FranchisePage() {
       <PageHero
         eyebrow="Franchise Opportunities"
         title="Build Your Business With The Blenders Club"
-        description="A proven premium shake bar concept, backed by full operational support — join our growing network of franchise partners."
+        description="A proven premium cloud kitchen concept, backed by full operational support — join our growing network of delivery-only franchise partners."
       />
 
       <section className="py-16">

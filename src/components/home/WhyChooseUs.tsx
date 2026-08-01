@@ -19,7 +19,7 @@ const reasons = [
   {
     icon: Clock,
     title: 'Fast & Reliable',
-    description: 'Consistent quality and quick turnaround whether you order in or for delivery.',
+    description: 'Consistent quality and quick turnaround on every delivery, straight from our kitchen.',
   },
   {
     icon: ShieldCheck,

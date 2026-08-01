@@ -45,8 +45,8 @@ export default function RefundPolicyPage() {
             <p>
               Approved refunds will be processed via the original payment method where applicable,
               or store credit, within 5–7 business days. As online payments are not yet enabled,
-              current orders are settled on delivery/pickup, so approved refunds may be issued as
-              store credit toward a future order.
+              current orders are settled on delivery, so approved refunds may be issued as store
+              credit toward a future order.
             </p>
 
             <h2>5. Non-Refundable Situations</h2>

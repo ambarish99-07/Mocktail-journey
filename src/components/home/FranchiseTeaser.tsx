@@ -2,13 +2,13 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { TrendingUp, Users, Store } from 'lucide-react';
+import { TrendingUp, Users, ChefHat } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
 import { FadeIn } from '@/components/ui/FadeIn';
 import { buttonClasses } from '@/components/ui/Button';
 
 const highlights = [
-  { icon: Store, label: 'Proven store format' },
+  { icon: ChefHat, label: 'Proven cloud kitchen format' },
   { icon: TrendingUp, label: 'Growing brand demand' },
   { icon: Users, label: 'Full operational support' },
 ];
@@ -22,10 +22,10 @@ export function FranchiseTeaser() {
             <span className="mb-3 inline-block text-sm font-semibold uppercase tracking-[0.2em] text-tbc-gold-400">
               Franchise Opportunities
             </span>
-            <h2 className="text-3xl font-semibold sm:text-4xl">Own a Blenders Club Outlet</h2>
+            <h2 className="text-3xl font-semibold sm:text-4xl">Own a Blenders Club Cloud Kitchen</h2>
             <p className="mt-4 text-tbc-cream-muted">
-              Join our growing network of premium shake bars. We provide the brand, the recipes,
-              and the support — you bring the ambition.
+              Join our growing network of delivery-only cloud kitchens. We provide the brand, the
+              recipes, and the support — you bring the ambition.
             </p>
             <ul className="mt-5 space-y-2">
               {highlights.map((h) => (
@@ -43,7 +43,7 @@ export function FranchiseTeaser() {
           <div className="relative order-1 h-64 w-full lg:order-2 lg:h-full">
             <Image
               src="https://images.unsplash.com/photo-1600093463592-8e36ae95ef56?w=1000&q=80"
-              alt="Premium Blenders Club storefront ambience"
+              alt="Behind the scenes at The Blenders Club"
               fill
               sizes="(min-width: 1024px) 50vw, 100vw"
               className="object-cover"

@@ -1,40 +1,18 @@
 import { z } from 'zod';
 
-export const checkoutSchema = z
-  .object({
-    fulfilment: z.enum(['delivery', 'pickup']),
-    fullName: z.string().trim().min(2, 'Enter your full name'),
-    phone: z
-      .string()
-      .trim()
-      .regex(/^[+]?[0-9]{10,13}$/, 'Enter a valid phone number'),
-    address: z.string().trim().optional().or(z.literal('')),
-    city: z.string().trim().optional().or(z.literal('')),
-    pincode: z.string().trim().optional().or(z.literal('')),
-    mapsLink: z.string().trim().url('Enter a valid Google Maps link').optional().or(z.literal('')),
-    specialInstructions: z.string().trim().max(300).optional().or(z.literal('')),
-  })
-  .superRefine((data, ctx) => {
-    if (data.fulfilment !== 'delivery') return;
-
-    if (!data.address || data.address.length < 5) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['address'],
-        message: 'Enter your delivery address',
-      });
-    }
-    if (!data.city || data.city.length < 2) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['city'], message: 'Enter your city' });
-    }
-    if (!data.pincode || !/^[0-9]{6}$/.test(data.pincode)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['pincode'],
-        message: 'Enter a valid 6-digit pincode',
-      });
-    }
-  });
+/** The Blenders Club is delivery-only (cloud kitchen, no dine-in/pickup) — delivery details are always required. */
+export const checkoutSchema = z.object({
+  fullName: z.string().trim().min(2, 'Enter your full name'),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^[+]?[0-9]{10,13}$/, 'Enter a valid phone number'),
+  address: z.string().trim().min(5, 'Enter your delivery address'),
+  city: z.string().trim().min(2, 'Enter your city'),
+  pincode: z.string().trim().regex(/^[0-9]{6}$/, 'Enter a valid 6-digit pincode'),
+  mapsLink: z.string().trim().url('Enter a valid Google Maps link').optional().or(z.literal('')),
+  specialInstructions: z.string().trim().max(300).optional().or(z.literal('')),
+});
 
 export type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 

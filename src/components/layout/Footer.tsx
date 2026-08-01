@@ -42,7 +42,7 @@ export function Footer() {
 
           <div>
             <h3 className="text-sm font-semibold uppercase tracking-wide text-tbc-gold-400">
-              Visit Us
+              Delivery Info
             </h3>
             <ul className="mt-4 space-y-3 text-sm text-tbc-cream-muted">
               <li className="flex items-start gap-2">
