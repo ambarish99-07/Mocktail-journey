@@ -86,7 +86,7 @@ export const menuItems: MenuItem[] = [
     description: 'Smooth Madagascar-style vanilla, blended light and creamy.',
     price: 179,
     category: 'signature-shakes',
-    image: 'https://images.unsplash.com/photo-1588775226864-8f71b7b86420?w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1568901839119-631418a3910d?w=800&q=80',
     flavorBadges: ['Classic'],
     pairsWith: ['caramel-bliss', 'saffron-gold'],
   },
