@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { Instagram, Facebook, MapPin, Phone, Mail } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
@@ -11,8 +12,11 @@ export function Footer() {
       <Container className="py-16">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-5">
           <div className="lg:col-span-2">
-            <Link href="/" className="font-heading text-xl font-semibold">
-              The <span className="text-gold-gradient">Blenders</span> Club
+            <Link href="/" className="flex items-center gap-2.5">
+              <Image src="/logo.png" alt="" width={40} height={40} className="h-10 w-10 shrink-0" />
+              <span className="font-heading text-xl font-semibold">
+                The <span className="text-gold-gradient">Blenders</span> Club
+              </span>
             </Link>
             <p className="mt-4 max-w-sm text-sm text-tbc-cream-muted">{siteConfig.description}</p>
             <div className="mt-5 flex gap-3">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, ShoppingCart, X } from 'lucide-react';
@@ -43,8 +44,18 @@ export function Navbar() {
           aria-label="Primary"
           className="flex h-20 items-center justify-between border-b border-white/5"
         >
-          <Link href="/" className="font-heading text-xl font-semibold tracking-wide sm:text-2xl">
-            The <span className="text-gold-gradient">Blenders</span> Club
+          <Link href="/" className="flex items-center gap-2.5">
+            <Image
+              src="/logo.png"
+              alt=""
+              width={48}
+              height={48}
+              priority
+              className="h-11 w-11 shrink-0 sm:h-12 sm:w-12"
+            />
+            <span className="font-heading text-xl font-semibold tracking-wide sm:text-2xl">
+              The <span className="text-gold-gradient">Blenders</span> Club
+            </span>
           </Link>
 
           <ul className="hidden items-center gap-7 lg:flex xl:gap-9">
