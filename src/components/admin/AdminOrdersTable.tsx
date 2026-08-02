@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatCurrency, cn } from '@/lib/utils';
 import type { OrderStatus, PaymentMethod, PaymentStatus } from '@/types/order';
@@ -19,6 +19,7 @@ interface AdminOrder {
   statusHistory: OrderStatusEvent[];
   payment: { method: PaymentMethod; status: PaymentStatus };
   isGuest: boolean;
+  recommendationSentAt?: string;
 }
 
 const STATUS_FLOW: OrderStatus[] = ['received', 'preparing', 'out-for-delivery', 'delivered'];
@@ -36,6 +37,7 @@ export function AdminOrdersTable() {
   const [orders, setOrders] = useState<AdminOrder[] | null>(null);
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [recommendingId, setRecommendingId] = useState<string | null>(null);
 
   const fetchOrders = useCallback(async () => {
     const url = statusFilter === 'all' ? '/api/admin/orders' : `/api/admin/orders?status=${statusFilter}`;
@@ -67,6 +69,23 @@ export function AdminOrdersTable() {
       fetchOrders();
     } finally {
       setUpdatingId(null);
+    }
+  };
+
+  const sendRecommendation = async (order: AdminOrder) => {
+    setRecommendingId(order.id);
+    try {
+      const res = await fetch(`/api/admin/orders/${order.id}/recommend`, { method: 'POST' });
+      const body = await res.json();
+      if (!res.ok) {
+        toast.error(body.error ?? 'Could not send recommendation.');
+        return;
+      }
+      const names = (body.items as { signatureName: string }[]).map((i) => i.signatureName).join(', ');
+      toast.success(`Sent ${order.delivery.fullName} a recommendation: ${names}.`);
+      fetchOrders();
+    } finally {
+      setRecommendingId(null);
     }
   };
 
@@ -140,8 +159,25 @@ export function AdminOrdersTable() {
                 </p>
 
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-tbc-charcoal-border pt-3">
-                  <span className="text-sm font-semibold">{STATUS_LABELS[order.status]}</span>
-                  <div className="flex gap-2">
+                  <div>
+                    <span className="text-sm font-semibold">{STATUS_LABELS[order.status]}</span>
+                    {order.recommendationSentAt && (
+                      <span className="ml-2 text-xs text-tbc-cream-dim">
+                        Recommendation sent{' '}
+                        {new Date(order.recommendationSentAt).toLocaleDateString('en-IN', { dateStyle: 'medium' })}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      disabled={recommendingId === order.id}
+                      onClick={() => sendRecommendation(order)}
+                      className="flex items-center gap-1.5 rounded-full border border-tbc-gold-400/50 px-4 py-1.5 text-xs font-semibold text-tbc-gold-400 transition-colors hover:bg-tbc-gold-400/10 disabled:opacity-50"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                      {recommendingId === order.id ? 'Sending…' : 'Send Recommendation'}
+                    </button>
                     {nextStatus && (
                       <button
                         type="button"

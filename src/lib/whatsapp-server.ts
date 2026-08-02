@@ -1,4 +1,5 @@
 import type { OrderDoc, OrderStatusEvent } from '@/types/db';
+import type { MenuItem } from '@/types/menu';
 import { formatCurrency } from '@/lib/utils';
 
 /**
@@ -93,5 +94,22 @@ export async function notifyCustomerStatusUpdate(order: OrderDoc, event: OrderSt
     to: order.delivery.phone,
     templateName: process.env.WHATSAPP_TEMPLATE_CUSTOMER_STATUS_UPDATE,
     bodyParams: [order.orderNumber, event.status],
+  });
+}
+
+/**
+ * Admin-triggered (for now) product recommendation, based on the customer's own
+ * purchase history — see src/lib/recommendations.ts for the selection logic.
+ * Structured as a plain reusable call so a future scheduled job can fire the
+ * same function without going through the admin route. Unlike the fire-and-forget
+ * notifications above, this returns its result so the admin UI can show whether
+ * the send actually succeeded.
+ */
+export async function sendRecommendationMessage(phone: string, customerName: string, items: MenuItem[]): Promise<SendResult> {
+  const itemNames = items.map((item) => item.signatureName);
+  return sendWhatsAppTemplateMessage({
+    to: phone,
+    templateName: process.env.WHATSAPP_TEMPLATE_RECOMMENDATION,
+    bodyParams: [customerName, ...itemNames],
   });
 }

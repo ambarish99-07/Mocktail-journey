@@ -32,6 +32,7 @@ export interface OrderDoc {
   whatsapp: {
     adminNotifiedAt?: string;
     customerNotifiedStatuses: OrderStatus[];
+    recommendationSentAt?: string;
   };
   createdAt: string;
   updatedAt: string;

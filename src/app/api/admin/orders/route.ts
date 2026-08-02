@@ -17,6 +17,7 @@ interface AdminOrder {
   statusHistory: OrderStatusEvent[];
   payment: { method: PaymentMethod; status: PaymentStatus };
   isGuest: boolean;
+  recommendationSentAt?: string;
 }
 
 function toAdminOrder(doc: OrderDoc): AdminOrder {
@@ -32,6 +33,7 @@ function toAdminOrder(doc: OrderDoc): AdminOrder {
     statusHistory: doc.statusHistory,
     payment: { method: doc.payment.method, status: doc.payment.status },
     isGuest: doc.userId === null,
+    recommendationSentAt: doc.whatsapp.recommendationSentAt,
   };
 }
 
