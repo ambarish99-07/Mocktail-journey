@@ -37,6 +37,7 @@ export async function POST(request: Request) {
     phone,
     role: 'customer',
     loyalty: { completedOrderCount: 0, isGoldMember: false },
+    punchCard: { ordersSinceReward: 0 },
     createdAt: now,
     updatedAt: now,
   };

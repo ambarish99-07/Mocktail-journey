@@ -8,6 +8,7 @@ import { Container } from '@/components/ui/Container';
 import { Button } from '@/components/ui/Button';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useAuthStore } from '@/lib/store/auth-store';
+import { ORDERS_PER_REWARD } from '@/lib/punch-card';
 import type { PlacedOrder, OrderStatus } from '@/types/order';
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
@@ -67,14 +68,41 @@ export function AccountClient() {
       </div>
 
       {authUser && (
-        <div className="mt-6 grid grid-cols-1 gap-4 rounded-xl2 border border-tbc-charcoal-border bg-tbc-charcoal-light p-6 sm:grid-cols-3">
-          <ProfileField label="Email" value={authUser.email} />
-          <ProfileField label="Phone" value={authUser.phone} />
-          <ProfileField
-            label="Loyalty Tier"
-            value={authUser.loyalty.isGoldMember || authUser.loyalty.completedOrderCount >= 5 ? 'Gold' : authUser.loyalty.completedOrderCount >= 1 ? 'Returning' : 'First Order'}
-          />
-        </div>
+        <>
+          <div className="mt-6 grid grid-cols-1 gap-4 rounded-xl2 border border-tbc-charcoal-border bg-tbc-charcoal-light p-6 sm:grid-cols-3">
+            <ProfileField label="Email" value={authUser.email} />
+            <ProfileField label="Phone" value={authUser.phone} />
+            <ProfileField
+              label="Loyalty Tier"
+              value={authUser.loyalty.isGoldMember || authUser.loyalty.completedOrderCount >= 5 ? 'Gold' : authUser.loyalty.completedOrderCount >= 1 ? 'Returning' : 'First Order'}
+            />
+          </div>
+
+          <div className="mt-4 rounded-xl2 border border-tbc-gold-400/30 bg-tbc-charcoal-light p-6">
+            <p className="text-xs uppercase tracking-wide text-tbc-cream-dim">Reward Punch Card</p>
+            <div className="mt-3 flex items-center gap-2">
+              {Array.from({ length: ORDERS_PER_REWARD }).map((_, i) => (
+                <span
+                  key={i}
+                  className={cn(
+                    'h-6 w-6 rounded-full border-2',
+                    i < authUser.punchCard.ordersSinceReward
+                      ? 'border-tbc-gold-400 bg-tbc-gold-400'
+                      : 'border-tbc-charcoal-border'
+                  )}
+                  aria-hidden="true"
+                />
+              ))}
+              <span className="ml-2 text-sm text-tbc-cream-muted">
+                {authUser.punchCard.ordersSinceReward >= ORDERS_PER_REWARD
+                  ? '🎉 Your next order gets 50% off your cheapest drink!'
+                  : `${ORDERS_PER_REWARD - authUser.punchCard.ordersSinceReward} more order${
+                      ORDERS_PER_REWARD - authUser.punchCard.ordersSinceReward === 1 ? '' : 's'
+                    } to unlock 50% off.`}
+              </span>
+            </div>
+          </div>
+        </>
       )}
 
       <h2 className="mb-4 mt-10 text-xl font-semibold">Order History</h2>

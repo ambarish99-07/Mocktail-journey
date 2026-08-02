@@ -13,8 +13,10 @@ import { Button, buttonClasses } from '@/components/ui/Button';
 import { CartSummary } from '@/components/cart/CartSummary';
 import { useCartStore } from '@/lib/store/cart-store';
 import { useLoyaltyStore, deriveLoyaltyTier } from '@/lib/store/loyalty-store';
+import { useAuthStore } from '@/lib/store/auth-store';
 import { useOrderStore } from '@/lib/store/order-store';
 import { computeOrderTotals, ESTIMATED_DELIVERY_MINUTES } from '@/lib/pricing';
+import { isPunchCardRewardOrder, ORDERS_PER_REWARD } from '@/lib/punch-card';
 import { checkoutSchema, type CheckoutFormValues } from '@/lib/validation';
 import { shareCurrentLocation, buildWhatsAppMessage, buildWhatsAppLink } from '@/lib/whatsapp';
 import { loadRazorpayScript } from '@/lib/razorpay-client';
@@ -29,6 +31,7 @@ export function CheckoutClient() {
   const items = useCartStore((s) => s.items);
   const clearCart = useCartStore((s) => s.clearCart);
   const { completedOrderCount, isGoldMember, recordOrderCompleted } = useLoyaltyStore();
+  const authUser = useAuthStore((s) => s.user);
   const setLastOrder = useOrderStore((s) => s.setLastOrder);
 
   const [locationStatus, setLocationStatus] = useState<'idle' | 'loading' | 'error'>('idle');
@@ -47,8 +50,14 @@ export function CheckoutClient() {
     resolver: zodResolver(checkoutSchema),
   });
 
-  const loyaltyTier = deriveLoyaltyTier(completedOrderCount, isGoldMember);
-  const totals = computeOrderTotals(items, { loyaltyTier });
+  // Logged-in customers get their real, server-tracked loyalty/punch-card state
+  // (matching what /api/orders will actually charge); guests fall back to the
+  // device-local simulation. Punch-card rewards are registered-accounts-only.
+  const loyaltyTier = authUser
+    ? deriveLoyaltyTier(authUser.loyalty.completedOrderCount, authUser.loyalty.isGoldMember)
+    : deriveLoyaltyTier(completedOrderCount, isGoldMember);
+  const punchCardReward = authUser ? isPunchCardRewardOrder(authUser.punchCard.ordersSinceReward) : false;
+  const totals = computeOrderTotals(items, { loyaltyTier, punchCardReward });
 
   const handleShareLocation = async () => {
     setLocationStatus('loading');
@@ -358,6 +367,14 @@ export function CheckoutClient() {
           </ul>
 
           <CartSummary totals={totals} />
+
+          {authUser && !punchCardReward && (
+            <p className="mt-3 text-xs text-tbc-cream-dim">
+              {ORDERS_PER_REWARD - authUser.punchCard.ordersSinceReward} more order
+              {ORDERS_PER_REWARD - authUser.punchCard.ordersSinceReward === 1 ? '' : 's'} until 50% off your
+              cheapest drink.
+            </p>
+          )}
 
           <p className="mt-4 text-xs text-tbc-cream-dim">
             Estimated delivery time:{' '}

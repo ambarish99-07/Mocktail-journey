@@ -4,6 +4,8 @@ import crypto from 'node:crypto';
 import { checkoutSchema } from '@/lib/validation';
 import { computeOrderTotals, ESTIMATED_DELIVERY_MINUTES } from '@/lib/pricing';
 import { deriveLoyaltyTier } from '@/lib/loyalty';
+import { isPunchCardRewardOrder } from '@/lib/punch-card';
+import { recordCompletedOrderForUser } from '@/lib/user-rewards';
 import { generateOrderId } from '@/lib/utils';
 import { getSession } from '@/lib/auth/server';
 import { getOrdersCollection, getUsersCollection } from '@/lib/db/collections';
@@ -61,20 +63,23 @@ export async function POST(request: Request) {
     throw err;
   }
 
-  // Best-effort session read — guest checkout is fully supported.
+  // Best-effort session read — guest checkout is fully supported. The punch-card
+  // reward is registered-accounts-only, so it stays false/unused for guests.
   const session = await getSession();
   let userId: ObjectId | null = null;
   let loyaltyTier = null as ReturnType<typeof deriveLoyaltyTier> | null;
+  let punchCardReward = false;
   if (session) {
     const users = await getUsersCollection();
     const user = await users.findOne({ _id: new ObjectId(session.userId) });
     if (user) {
       userId = user._id;
       loyaltyTier = deriveLoyaltyTier(user.loyalty.completedOrderCount, user.loyalty.isGoldMember);
+      punchCardReward = isPunchCardRewardOrder(user.punchCard?.ordersSinceReward ?? 0);
     }
   }
 
-  const totals = computeOrderTotals(items, { loyaltyTier });
+  const totals = computeOrderTotals(items, { loyaltyTier, punchCardReward });
   const now = new Date().toISOString();
   const delivery = deliveryResult.data;
 
@@ -99,6 +104,7 @@ export async function POST(request: Request) {
     statusHistory: [{ status: 'received', at: now }],
     payment: { method: paymentMethod, status: 'pending' },
     whatsapp: { customerNotifiedStatuses: [] },
+    punchCardRewardApplied: punchCardReward,
     createdAt: now,
     updatedAt: now,
   };
@@ -137,9 +143,13 @@ export async function POST(request: Request) {
   const result = await orders.insertOne(orderDoc as OrderDoc);
   const saved: OrderDoc = { ...orderDoc, _id: result.insertedId };
 
-  // COD orders are confirmed immediately — notify the admin now. Never blocks/fails the order.
+  // COD orders are confirmed immediately — notify the admin and advance the
+  // customer's reward counters now. Never blocks/fails the order.
   await notifyAdminNewOrder(saved);
   await orders.updateOne({ _id: saved._id }, { $set: { 'whatsapp.adminNotifiedAt': new Date().toISOString() } });
+  if (userId) {
+    await recordCompletedOrderForUser(userId, punchCardReward);
+  }
 
   return NextResponse.json({ order: toPlacedOrder(saved) }, { status: 201 });
 }

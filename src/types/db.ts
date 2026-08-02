@@ -34,6 +34,8 @@ export interface OrderDoc {
     customerNotifiedStatuses: OrderStatus[];
     recommendationSentAt?: string;
   };
+  /** Whether this order redeemed the punch-card reward (see src/lib/punch-card.ts). */
+  punchCardRewardApplied: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -50,6 +52,10 @@ export interface UserDoc {
     completedOrderCount: number;
     isGoldMember: boolean;
   };
+  /** "Order 5, get 50% off your 6th" — resets to 0 each time the reward is redeemed. */
+  punchCard: {
+    ordersSinceReward: number;
+  };
   createdAt: string;
   updatedAt: string;
 }
@@ -64,5 +70,8 @@ export interface SafeUser {
   loyalty: {
     completedOrderCount: number;
     isGoldMember: boolean;
+  };
+  punchCard: {
+    ordersSinceReward: number;
   };
 }

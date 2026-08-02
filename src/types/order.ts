@@ -18,6 +18,7 @@ export interface DeliveryDetails {
 
 export interface OrderTotals {
   subtotal: number;
+  punchCardDiscount: number;
   websiteDiscount: number;
   loyaltyDiscount: number;
   deliveryFee: number;

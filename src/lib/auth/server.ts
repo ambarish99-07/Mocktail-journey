@@ -18,6 +18,8 @@ export function toSafeUser(doc: UserDoc): SafeUser {
     phone: doc.phone,
     role: doc.role,
     loyalty: doc.loyalty,
+    // Accounts created before the punch-card feature shipped won't have this field yet.
+    punchCard: doc.punchCard ?? { ordersSinceReward: 0 },
   };
 }
 
