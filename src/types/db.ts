@@ -1,6 +1,6 @@
 import type { ObjectId } from 'mongodb';
 import type { CartItem } from './cart';
-import type { DeliveryDetails, LoyaltyTier, OrderStatus, OrderTotals, PaymentMethod, PaymentStatus } from './order';
+import type { DeliveryDetails, OrderStatus, OrderTotals, PaymentMethod, PaymentStatus } from './order';
 
 export interface OrderStatusEvent {
   status: OrderStatus;
@@ -18,7 +18,14 @@ export interface OrderDoc {
   items: CartItem[];
   delivery: DeliveryDetails;
   totals: OrderTotals;
-  loyaltyTierAtOrder: LoyaltyTier | null;
+  /** Whether the flat 25% Premium Member discount (vs. the quantity-tier discount) applied to this order. */
+  isPremiumOrder: boolean;
+  /** Whether this order redeemed the every-6th-order cold-coffee reward. */
+  coldCoffeeRewardApplied: boolean;
+  /** Whether this order redeemed the every-10th-order free-item reward. */
+  freeItemRewardApplied: boolean;
+  /** Straight-line distance from the kitchen in km, if it could be determined — null if delivery coordinates couldn't be resolved. Informational + drives the Premium free-delivery radius check. */
+  deliveryDistanceKm: number | null;
   estimatedMinutes: number;
   status: OrderStatus;
   statusHistory: OrderStatusEvent[];
@@ -34,8 +41,6 @@ export interface OrderDoc {
     customerNotifiedStatuses: OrderStatus[];
     recommendationSentAt?: string;
   };
-  /** Whether this order redeemed the punch-card reward (see src/lib/punch-card.ts). */
-  punchCardRewardApplied: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -50,11 +55,18 @@ export interface UserDoc {
   role: 'customer' | 'admin';
   loyalty: {
     completedOrderCount: number;
-    isGoldMember: boolean;
   };
-  /** "Order 5, get 50% off your 6th" — resets to 0 each time the reward is redeemed. */
-  punchCard: {
-    ordersSinceReward: number;
+  /** Repeating milestone rewards — each counter resets to 0 the moment it triggers its reward. */
+  rewards: {
+    /** Every 6th order: 50% off one cold coffee. */
+    coldCoffeeCounter: number;
+    /** Every 10th order: one eligible drink free. */
+    freeItemCounter: number;
+  };
+  /** Unlocks (becomes offerable) at 15 completed orders, but customers must actively opt in — see isMember. */
+  premium: {
+    isMember: boolean;
+    enrolledAt: string | null;
   };
   createdAt: string;
   updatedAt: string;
@@ -69,9 +81,13 @@ export interface SafeUser {
   role: 'customer' | 'admin';
   loyalty: {
     completedOrderCount: number;
-    isGoldMember: boolean;
   };
-  punchCard: {
-    ordersSinceReward: number;
+  rewards: {
+    coldCoffeeCounter: number;
+    freeItemCounter: number;
+  };
+  premium: {
+    isMember: boolean;
+    enrolledAt: string | null;
   };
 }

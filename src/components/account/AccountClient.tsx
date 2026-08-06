@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Package, LogOut } from 'lucide-react';
+import { Package, LogOut, Crown } from 'lucide-react';
 import { toast } from 'sonner';
 import { Container } from '@/components/ui/Container';
 import { Button } from '@/components/ui/Button';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useAuthStore } from '@/lib/store/auth-store';
-import { ORDERS_PER_REWARD } from '@/lib/punch-card';
+import { isPremiumEligible } from '@/lib/rewards-eligibility';
+import { pricingConfig } from '@/lib/config';
 import type { PlacedOrder, OrderStatus } from '@/types/order';
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
@@ -33,6 +34,7 @@ export function AccountClient() {
   const authStatus = useAuthStore((s) => s.status);
   const setUser = useAuthStore((s) => s.setUser);
   const [orders, setOrders] = useState<PlacedOrder[] | null>(null);
+  const [enrolling, setEnrolling] = useState(false);
 
   useEffect(() => {
     fetch('/api/orders')
@@ -46,6 +48,22 @@ export function AccountClient() {
     setUser(null);
     toast.success('Signed out.');
     router.push('/');
+  };
+
+  const handleEnrollPremium = async () => {
+    setEnrolling(true);
+    try {
+      const res = await fetch('/api/account/premium', { method: 'POST' });
+      const body = await res.json();
+      if (!res.ok) {
+        toast.error(body.error ?? 'Could not enroll in Premium Membership.');
+        return;
+      }
+      setUser(body.user);
+      toast.success('Welcome to Premium Membership! 25% off every order from now on.');
+    } finally {
+      setEnrolling(false);
+    }
   };
 
   if (authStatus === 'guest') {
@@ -72,35 +90,58 @@ export function AccountClient() {
           <div className="mt-6 grid grid-cols-1 gap-4 rounded-xl2 border border-tbc-charcoal-border bg-tbc-charcoal-light p-6 sm:grid-cols-3">
             <ProfileField label="Email" value={authUser.email} />
             <ProfileField label="Phone" value={authUser.phone} />
-            <ProfileField
-              label="Loyalty Tier"
-              value={authUser.loyalty.isGoldMember || authUser.loyalty.completedOrderCount >= 5 ? 'Gold' : authUser.loyalty.completedOrderCount >= 1 ? 'Returning' : 'First Order'}
-            />
+            <ProfileField label="Completed Orders" value={String(authUser.loyalty.completedOrderCount)} />
           </div>
 
-          <div className="mt-4 rounded-xl2 border border-tbc-gold-400/30 bg-tbc-charcoal-light p-6">
-            <p className="text-xs uppercase tracking-wide text-tbc-cream-dim">Reward Punch Card</p>
-            <div className="mt-3 flex items-center gap-2">
-              {Array.from({ length: ORDERS_PER_REWARD }).map((_, i) => (
-                <span
-                  key={i}
-                  className={cn(
-                    'h-6 w-6 rounded-full border-2',
-                    i < authUser.punchCard.ordersSinceReward
-                      ? 'border-tbc-gold-400 bg-tbc-gold-400'
-                      : 'border-tbc-charcoal-border'
-                  )}
-                  aria-hidden="true"
-                />
-              ))}
-              <span className="ml-2 text-sm text-tbc-cream-muted">
-                {authUser.punchCard.ordersSinceReward >= ORDERS_PER_REWARD
-                  ? '🎉 Your next order gets 50% off your cheapest drink!'
-                  : `${ORDERS_PER_REWARD - authUser.punchCard.ordersSinceReward} more order${
-                      ORDERS_PER_REWARD - authUser.punchCard.ordersSinceReward === 1 ? '' : 's'
-                    } to unlock 50% off.`}
-              </span>
+          {authUser.premium.isMember ? (
+            <div className="mt-4 flex items-center gap-3 rounded-xl2 border border-tbc-gold-400/50 bg-tbc-gold-400/10 p-6">
+              <Crown className="h-6 w-6 shrink-0 text-tbc-gold-400" aria-hidden="true" />
+              <div>
+                <p className="font-semibold text-tbc-gold-400">Premium Member</p>
+                <p className="text-sm text-tbc-cream-muted">
+                  {pricingConfig.premium.discountPercent}% off every order, plus free delivery within{' '}
+                  {pricingConfig.premium.freeDeliveryRadiusKm}km of our kitchen.
+                </p>
+              </div>
             </div>
+          ) : isPremiumEligible(authUser.loyalty.completedOrderCount) ? (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl2 border border-tbc-gold-400/50 bg-tbc-gold-400/10 p-6">
+              <div>
+                <p className="font-semibold text-tbc-gold-400">Premium Membership Unlocked!</p>
+                <p className="text-sm text-tbc-cream-muted">
+                  Join now for {pricingConfig.premium.discountPercent}% off every order and free delivery within{' '}
+                  {pricingConfig.premium.freeDeliveryRadiusKm}km.
+                </p>
+              </div>
+              <Button variant="gold" size="sm" disabled={enrolling} onClick={handleEnrollPremium}>
+                {enrolling ? 'Joining…' : 'Join Premium'}
+              </Button>
+            </div>
+          ) : (
+            <div className="mt-4 rounded-xl2 border border-tbc-charcoal-border bg-tbc-charcoal-light p-6">
+              <p className="text-xs uppercase tracking-wide text-tbc-cream-dim">Premium Membership</p>
+              <p className="mt-1.5 text-sm text-tbc-cream-muted">
+                {pricingConfig.premium.unlockAfterOrders - authUser.loyalty.completedOrderCount} more order
+                {pricingConfig.premium.unlockAfterOrders - authUser.loyalty.completedOrderCount === 1 ? '' : 's'} to unlock
+                — {pricingConfig.premium.discountPercent}% off every order plus free delivery within{' '}
+                {pricingConfig.premium.freeDeliveryRadiusKm}km.
+              </p>
+            </div>
+          )}
+
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <RewardProgress
+              label="Cold Coffee Reward"
+              helpText="50% off a cold coffee"
+              current={authUser.rewards.coldCoffeeCounter}
+              every={pricingConfig.milestoneRewards.coldCoffee.every}
+            />
+            <RewardProgress
+              label="Free Drink Reward"
+              helpText="a drink on the house"
+              current={authUser.rewards.freeItemCounter}
+              every={pricingConfig.milestoneRewards.freeItem.every}
+            />
           </div>
         </>
       )}
@@ -158,6 +199,43 @@ function ProfileField({ label, value }: { label: string; value: string }) {
     <div>
       <p className="text-xs uppercase tracking-wide text-tbc-cream-dim">{label}</p>
       <p className="mt-1 font-medium">{value}</p>
+    </div>
+  );
+}
+
+function RewardProgress({
+  label,
+  helpText,
+  current,
+  every,
+}: {
+  label: string;
+  helpText: string;
+  current: number;
+  every: number;
+}) {
+  // Matches the backend check (src/lib/rewards-eligibility.ts) — the counter
+  // never actually reaches `every` since the reward fires (and resets it) one
+  // order sooner than that.
+  const unlocked = current >= every - 1;
+  return (
+    <div className="rounded-xl2 border border-tbc-gold-400/30 bg-tbc-charcoal-light p-6">
+      <p className="text-xs uppercase tracking-wide text-tbc-cream-dim">{label}</p>
+      <div className="mt-3 flex items-center gap-1.5">
+        {Array.from({ length: every }).map((_, i) => (
+          <span
+            key={i}
+            className={cn(
+              'h-5 w-5 rounded-full border-2',
+              i < current ? 'border-tbc-gold-400 bg-tbc-gold-400' : 'border-tbc-charcoal-border'
+            )}
+            aria-hidden="true"
+          />
+        ))}
+      </div>
+      <p className="mt-2 text-sm text-tbc-cream-muted">
+        {unlocked ? `🎉 Your next order gets ${helpText}!` : `${every - current} more order${every - current === 1 ? '' : 's'} to unlock ${helpText}.`}
+      </p>
     </div>
   );
 }

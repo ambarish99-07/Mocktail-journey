@@ -17,9 +17,10 @@ export function toSafeUser(doc: UserDoc): SafeUser {
     fullName: doc.fullName,
     phone: doc.phone,
     role: doc.role,
-    loyalty: doc.loyalty,
-    // Accounts created before the punch-card feature shipped won't have this field yet.
-    punchCard: doc.punchCard ?? { ordersSinceReward: 0 },
+    // Fallbacks below cover accounts created before this reward system shipped.
+    loyalty: doc.loyalty ?? { completedOrderCount: 0 },
+    rewards: doc.rewards ?? { coldCoffeeCounter: 0, freeItemCounter: 0 },
+    premium: doc.premium ?? { isMember: false, enrolledAt: null },
   };
 }
 

@@ -11,13 +11,13 @@ import { pricingConfig } from '@/lib/config';
 const benefits = [
   {
     icon: Percent,
-    title: `Automatic ${pricingConfig.websiteDiscountPercent}% Off`,
-    description: 'Applied to every order, no coupon code needed — a discount you won\'t find on Zomato or Swiggy.',
+    title: 'Automatic Multi-Shake Discount',
+    description: 'Order more in one go and save more, up to 20% off — no coupon code needed.',
   },
   {
     icon: Award,
     title: 'Earn Rewards',
-    description: 'Every direct order builds toward Blenders Club Rewards — up to 20% off as a Gold Member.',
+    description: `Every direct order builds toward repeat rewards and Premium Membership — up to ${pricingConfig.premium.discountPercent}% off every order.`,
   },
   {
     icon: Sliders,

@@ -1,8 +1,9 @@
 import { ADD_ON_OPTIONS } from '@/types/menu';
+import { getMenuItemById } from '@/data/menu';
 import type { CartItem } from '@/types/cart';
-import type { LoyaltyTier, OrderTotals } from '@/types/order';
+import type { OrderTotals } from '@/types/order';
 import { pricingConfig } from '@/lib/config';
-import { PUNCH_CARD_DISCOUNT_PERCENT } from '@/lib/punch-card';
+import { quantityDiscountPercent } from '@/lib/rewards-eligibility';
 
 /** Effective per-unit price of a line, including its selected add-ons (not multiplied by quantity). */
 function unitEffectivePrice(item: CartItem): number {
@@ -22,71 +23,94 @@ export function cartSubtotal(items: CartItem[]): number {
   return items.reduce((sum, item) => sum + lineItemTotal(item), 0);
 }
 
-/**
- * Punch-card reward: half off a single unit of the cheapest eligible drink.
- * Combo lines (menuItemId starting "combo:") don't qualify — only individual
- * shakes/cold coffees do.
- */
-function punchCardDiscountAmount(items: CartItem[]): number {
-  const eligible = items.filter((item) => !item.menuItemId.startsWith('combo:'));
-  if (eligible.length === 0) return 0;
-
-  const cheapest = eligible.reduce((min, item) =>
-    unitEffectivePrice(item) < unitEffectivePrice(min) ? item : min
-  );
-  return Math.round((unitEffectivePrice(cheapest) * PUNCH_CARD_DISCOUNT_PERCENT) / 100);
+/** Combo lines (menuItemId starting "combo:") are a self-contained bundle deal — excluded from quantity discount, per-item rewards, and "cheapest item" selection. */
+function isCombo(item: CartItem): boolean {
+  return item.menuItemId.startsWith('combo:');
 }
 
-/** Loyalty discount percent for a given tier — falls back to the always-on website discount. */
-export function loyaltyDiscountPercent(tier: LoyaltyTier | null): number {
-  switch (tier) {
-    case 'first-order':
-      return pricingConfig.loyalty.firstOrderPercent;
-    case 'returning':
-      return pricingConfig.loyalty.returningPercent;
-    case 'gold':
-      return pricingConfig.loyalty.goldPercent;
-    default:
-      return 0;
-  }
+function cheapestItem(items: CartItem[]): CartItem | null {
+  const eligible = items.filter((item) => !isCombo(item));
+  if (eligible.length === 0) return null;
+  return eligible.reduce((min, item) => (unitEffectivePrice(item) < unitEffectivePrice(min) ? item : min));
+}
+
+/** Every-6th-order reward: 50% off one unit of the cheapest cold coffee in the cart. 0 if none present. */
+function coldCoffeeRewardAmount(items: CartItem[]): number {
+  const coldCoffees = items.filter((item) => getMenuItemById(item.menuItemId)?.category === 'cold-coffee');
+  const cheapest = cheapestItem(coldCoffees);
+  if (!cheapest) return 0;
+  return Math.round((unitEffectivePrice(cheapest) * pricingConfig.milestoneRewards.coldCoffee.discountPercent) / 100);
+}
+
+/** Every-10th-order reward: one unit of the cheapest eligible drink, fully free. */
+function freeItemRewardAmount(items: CartItem[]): number {
+  const cheapest = cheapestItem(items);
+  return cheapest ? unitEffectivePrice(cheapest) : 0;
+}
+
+interface OrderTotalsOptions {
+  /** Flat 25% instead of the quantity-tier discount — mutually exclusive, Premium always wins when true. */
+  isPremiumMember?: boolean;
+  coldCoffeeReward?: boolean;
+  freeItemReward?: boolean;
+  /** Premium Member + within the free-delivery radius — decided by the caller (needs geocoding, not pure). */
+  freeDeliveryEligible?: boolean;
 }
 
 /**
  * Computes full order totals for checkout.
- * The website discount (always-on) and loyalty discount are mutually
- * exclusive — a logged-in loyalty member gets the better of the two, never both stacked,
- * to keep the incentive structure simple and predictable for customers.
- * The punch-card reward is a separate mechanic (a per-item markdown, not a
- * subtotal percentage) and stacks on top of whichever of the two applies.
+ *
+ * orderDiscount applies only to non-combo lines: either the quantity-tier
+ * discount (based on how many eligible drinks are in THIS cart — no order
+ * history involved) or, for Premium Members, a flat 25% — never both,
+ * Premium always wins since 25% ≥ the quantity tier's max of 20%.
+ *
+ * comboDiscount is a separate flat 15% on combo lines specifically — always
+ * on, every order, regardless of quantity/Premium status (combos are their
+ * own bundle deal, not part of the quantity-tier system).
+ *
+ * The milestone rewards (cold coffee / free item) are a third mechanic —
+ * per-item markdowns, not subtotal percentages — and stack on top of both.
  */
-export function computeOrderTotals(
-  items: CartItem[],
-  options: { loyaltyTier?: LoyaltyTier | null; punchCardReward?: boolean } = {}
-): OrderTotals {
+export function computeOrderTotals(items: CartItem[], options: OrderTotalsOptions = {}): OrderTotals {
   const subtotal = cartSubtotal(items);
+  const comboItems = items.filter(isCombo);
+  const nonComboItems = items.filter((item) => !isCombo(item));
+  const comboSubtotal = cartSubtotal(comboItems);
+  const nonComboSubtotal = cartSubtotal(nonComboItems);
+  const totalUnits = nonComboItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  const punchCardDiscount = options.punchCardReward ? punchCardDiscountAmount(items) : 0;
+  let orderDiscount = 0;
+  let orderDiscountLabel = '';
+  if (options.isPremiumMember) {
+    orderDiscount = Math.round((nonComboSubtotal * pricingConfig.premium.discountPercent) / 100);
+    orderDiscountLabel = orderDiscount > 0 ? `Premium Member Discount (${pricingConfig.premium.discountPercent}%)` : '';
+  } else {
+    const percent = quantityDiscountPercent(totalUnits);
+    orderDiscount = Math.round((nonComboSubtotal * percent) / 100);
+    orderDiscountLabel = orderDiscount > 0 ? `Multi-Shake Discount (${percent}%)` : '';
+  }
 
-  const websiteDiscountAmount = Math.round((subtotal * pricingConfig.websiteDiscountPercent) / 100);
-  const loyaltyPercent = loyaltyDiscountPercent(options.loyaltyTier ?? null);
-  const loyaltyDiscountAmount = Math.round((subtotal * loyaltyPercent) / 100);
+  const comboDiscount = Math.round((comboSubtotal * pricingConfig.combo.discountPercent) / 100);
 
-  const bestDiscount = Math.max(websiteDiscountAmount, loyaltyDiscountAmount);
-  const websiteDiscount = loyaltyDiscountAmount > websiteDiscountAmount ? 0 : bestDiscount;
-  const loyaltyDiscount = loyaltyDiscountAmount > websiteDiscountAmount ? bestDiscount : 0;
+  const coldCoffeeDiscount = options.coldCoffeeReward ? coldCoffeeRewardAmount(items) : 0;
+  const freeItemDiscount = options.freeItemReward ? freeItemRewardAmount(items) : 0;
 
-  const deliveryFee = subtotal >= pricingConfig.freeDeliveryThreshold ? 0 : pricingConfig.deliveryFee;
+  const deliveryFee =
+    subtotal >= pricingConfig.freeDeliveryThreshold || options.freeDeliveryEligible ? 0 : pricingConfig.deliveryFee;
 
-  const taxableAmount = subtotal - bestDiscount - punchCardDiscount;
+  const taxableAmount = subtotal - orderDiscount - comboDiscount - coldCoffeeDiscount - freeItemDiscount;
   const tax = Math.round((taxableAmount * pricingConfig.taxRatePercent) / 100);
 
   const total = taxableAmount + tax + deliveryFee;
 
   return {
     subtotal,
-    punchCardDiscount,
-    websiteDiscount,
-    loyaltyDiscount,
+    orderDiscount,
+    orderDiscountLabel,
+    comboDiscount,
+    coldCoffeeDiscount,
+    freeItemDiscount,
     deliveryFee,
     tax,
     total,

@@ -8,13 +8,19 @@ interface CartSummaryProps {
 }
 
 export function CartSummary({ totals, className, showSavedBanner = true }: CartSummaryProps) {
-  const totalDiscount = totals.punchCardDiscount + totals.websiteDiscount + totals.loyaltyDiscount;
+  const totalDiscount =
+    totals.orderDiscount + totals.comboDiscount + totals.coldCoffeeDiscount + totals.freeItemDiscount;
 
   return (
     <div className={cn('space-y-3', className)}>
-      {totals.punchCardDiscount > 0 && (
+      {totals.freeItemDiscount > 0 && (
         <div className="rounded-xl2 border border-tbc-gold-400/50 bg-tbc-gold-400/10 px-4 py-3 text-sm text-tbc-gold-400">
-          🎉 Reward unlocked — 50% off your cheapest drink this order.
+          🎉 Reward unlocked — one drink is free this order.
+        </div>
+      )}
+      {totals.coldCoffeeDiscount > 0 && (
+        <div className="rounded-xl2 border border-tbc-gold-400/50 bg-tbc-gold-400/10 px-4 py-3 text-sm text-tbc-gold-400">
+          🎉 Reward unlocked — 50% off a cold coffee this order.
         </div>
       )}
       {showSavedBanner && totalDiscount > 0 && (
@@ -25,25 +31,32 @@ export function CartSummary({ totals, className, showSavedBanner = true }: CartS
       )}
 
       <Row label="Subtotal" value={formatCurrency(totals.subtotal)} />
-      {totals.punchCardDiscount > 0 && (
+      {totals.orderDiscount > 0 && (
         <Row
-          label="Reward Discount"
-          value={`- ${formatCurrency(totals.punchCardDiscount)}`}
+          label={totals.orderDiscountLabel || 'Discount'}
+          value={`- ${formatCurrency(totals.orderDiscount)}`}
+          valueClassName="text-tbc-emerald-400"
+        />
+      )}
+      {totals.comboDiscount > 0 && (
+        <Row
+          label="Combo Discount (15%)"
+          value={`- ${formatCurrency(totals.comboDiscount)}`}
+          valueClassName="text-tbc-emerald-400"
+        />
+      )}
+      {totals.coldCoffeeDiscount > 0 && (
+        <Row
+          label="Cold Coffee Reward"
+          value={`- ${formatCurrency(totals.coldCoffeeDiscount)}`}
           valueClassName="text-tbc-gold-400"
         />
       )}
-      {totals.websiteDiscount > 0 && (
+      {totals.freeItemDiscount > 0 && (
         <Row
-          label="Website Discount"
-          value={`- ${formatCurrency(totals.websiteDiscount)}`}
-          valueClassName="text-tbc-emerald-400"
-        />
-      )}
-      {totals.loyaltyDiscount > 0 && (
-        <Row
-          label="Loyalty Discount"
-          value={`- ${formatCurrency(totals.loyaltyDiscount)}`}
-          valueClassName="text-tbc-emerald-400"
+          label="Free Drink Reward"
+          value={`- ${formatCurrency(totals.freeItemDiscount)}`}
+          valueClassName="text-tbc-gold-400"
         />
       )}
       <Row

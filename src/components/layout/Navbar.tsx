@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, ShoppingCart, User, X } from 'lucide-react';
+import { Menu, ShoppingBag, ShoppingCart, User, X } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
 import { buttonClasses } from '@/components/ui/Button';
 import { navLinks } from '@/lib/config';
@@ -90,6 +90,15 @@ export function Navbar() {
             >
               Order Directly
             </Link>
+            {/* Compact icon-only equivalent below the sm breakpoint, so there's
+                always a visible order CTA, not just on larger screens. */}
+            <Link
+              href="/menu"
+              aria-label="Order Now"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-gold-gradient text-tbc-black shadow-gold-glow transition-transform hover:scale-105 sm:hidden"
+            >
+              <ShoppingBag className="h-5 w-5" aria-hidden="true" />
+            </Link>
 
             <button
               type="button"
@@ -132,6 +141,9 @@ export function Navbar() {
       {isMobileOpen && (
         <div className="border-b border-white/5 bg-tbc-black lg:hidden">
           <Container>
+            <Link href="/menu" className={cn(buttonClasses('gold', 'md'), 'mt-4 w-full')}>
+              Order Now
+            </Link>
             <ul className="flex flex-col gap-1 py-4">
               {navLinks.map((link) => (
                 <li key={link.href}>

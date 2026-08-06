@@ -1,20 +1,22 @@
 import { getMenuItemById } from '@/data/menu';
-import { chooseNCombos } from '@/data/combos';
+import { fixedCombos, buildYourOwnCombo } from '@/data/combos';
 import { ADD_ON_OPTIONS } from '@/types/menu';
 import type { CartItem } from '@/types/cart';
 
 export class OrderValidationError extends Error {}
 
-/**
- * Server-side price/contents revalidation for a submitted cart — never trust
- * client-sent unitPrice/addOnIds. "Choose N" combos add a synthetic line whose
- * menuItemId is `combo:${comboId}:${timestamp}` (see ChooseComboModal.tsx),
- * priced at the combo's flat comboPrice with no add-ons; everything else is a
- * real menu item priced from src/data/menu.ts + src/types/menu.ts add-ons.
- */
 const MAX_LINE_ITEMS = 50;
 const MAX_QUANTITY_PER_LINE = 20;
 
+/**
+ * Server-side price/contents revalidation for a submitted cart — never trust
+ * client-sent unitPrice/addOnIds. Combo lines carry a synthetic menuItemId:
+ * `combo:fixed:<comboId>` (a curated pairing, see data/combos.ts fixedCombos)
+ * or `combo:custom:<anything>` (the "Create Your Own Combo" picker) — both
+ * price at their fixed comboPrice regardless of which real items the display
+ * text names, since the bundle price doesn't depend on the exact selection.
+ * Everything else is a real menu item priced from src/data/menu.ts.
+ */
 export function revalidateCartItems(items: unknown): CartItem[] {
   if (!Array.isArray(items) || items.length === 0) {
     throw new OrderValidationError('Your cart is empty.');
@@ -39,15 +41,23 @@ export function revalidateCartItems(items: unknown): CartItem[] {
       throw new OrderValidationError(`Quantity per item must be between 1 and ${MAX_QUANTITY_PER_LINE}.`);
     }
 
-    if (item.menuItemId.startsWith('combo:')) {
-      const comboId = item.menuItemId.split(':')[1];
-      const combo = chooseNCombos.find((c) => c.id === comboId);
+    if (item.menuItemId.startsWith('combo:fixed:')) {
+      const comboId = item.menuItemId.split(':')[2];
+      const combo = fixedCombos.find((c) => c.id === comboId);
       if (!combo) {
         throw new OrderValidationError('One of the combos in your cart is no longer available.');
       }
       return {
         ...item,
         unitPrice: combo.comboPrice,
+        customization: { ...item.customization, addOnIds: [] },
+      };
+    }
+
+    if (item.menuItemId.startsWith('combo:custom:')) {
+      return {
+        ...item,
+        unitPrice: buildYourOwnCombo.comboPrice,
         customization: { ...item.customization, addOnIds: [] },
       };
     }

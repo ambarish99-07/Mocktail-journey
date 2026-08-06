@@ -4,57 +4,58 @@ import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
 import { Check, X } from 'lucide-react';
-import type { ChooseNCombo } from '@/data/combos';
+import { buildYourOwnCombo } from '@/data/combos';
 import { menuItems } from '@/data/menu';
 import { DEFAULT_CUSTOMIZATION } from '@/types/cart';
 import { Button } from '@/components/ui/Button';
 import { useCartStore } from '@/lib/store/cart-store';
 import { formatCurrency, cn } from '@/lib/utils';
 
-interface ChooseComboModalProps {
-  combo: ChooseNCombo | null;
+interface CreateYourOwnComboModalProps {
+  open: boolean;
   onClose: () => void;
 }
 
 /**
- * Lets a customer pick N drinks to build a dynamic combo. The bundle is
- * added to the cart as a single synthetic line (id-prefixed `combo:`) at
- * the fixed combo price — per-drink customization isn't supported for
- * bundles in v1; customers who want that should add drinks individually.
+ * Lets a customer pick 2 drinks to build their own combo. Added to the cart
+ * as a single synthetic line (id-prefixed `combo:custom:`) at the flat
+ * bundle price — the server re-validates and re-prices this against
+ * buildYourOwnCombo regardless of which items are named in the display text
+ * (the price doesn't depend on the exact selection, see order-revalidation.ts).
  */
-export function ChooseComboModal({ combo, onClose }: ChooseComboModalProps) {
+export function CreateYourOwnComboModal({ open, onClose }: CreateYourOwnComboModalProps) {
   const addItem = useCartStore((s) => s.addItem);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   useEffect(() => {
-    if (combo) setSelectedIds([]);
-  }, [combo]);
+    if (open) setSelectedIds([]);
+  }, [open]);
 
-  if (!combo) return null;
+  if (!open) return null;
 
-  const eligibleItems = combo.eligibleCategory
-    ? menuItems.filter((m) => m.category === combo.eligibleCategory)
+  const eligibleItems = buildYourOwnCombo.eligibleCategory
+    ? menuItems.filter((m) => m.category === buildYourOwnCombo.eligibleCategory)
     : menuItems;
 
   const toggleItem = (id: string) => {
     setSelectedIds((prev) => {
       if (prev.includes(id)) return prev.filter((i) => i !== id);
-      if (prev.length >= combo.chooseCount) return prev;
+      if (prev.length >= buildYourOwnCombo.chooseCount) return prev;
       return [...prev, id];
     });
   };
 
-  const isComplete = selectedIds.length === combo.chooseCount;
+  const isComplete = selectedIds.length === buildYourOwnCombo.chooseCount;
 
   const handleConfirm = () => {
     if (!isComplete) return;
     const chosen = selectedIds.map((id) => menuItems.find((m) => m.id === id)!);
     const syntheticItem = {
-      id: `combo:${combo.id}:${Date.now()}`,
-      signatureName: `${combo.name} (${combo.chooseCount} drinks)`,
+      id: `combo:custom:${Date.now()}`,
+      signatureName: buildYourOwnCombo.name,
       commonName: chosen.map((c) => c.signatureName).join(' + '),
-      description: combo.description,
-      price: combo.comboPrice,
+      description: buildYourOwnCombo.description,
+      price: buildYourOwnCombo.comboPrice,
       category: chosen[0]?.category ?? 'signature-shakes',
       image: chosen[0]?.image ?? '',
       flavorBadges: [],
@@ -75,7 +76,7 @@ export function ChooseComboModal({ combo, onClose }: ChooseComboModalProps) {
         <motion.div
           role="dialog"
           aria-modal="true"
-          aria-labelledby="combo-title"
+          aria-labelledby="custom-combo-title"
           className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl bg-tbc-charcoal shadow-premium sm:rounded-2xl"
           initial={{ y: 40, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -85,11 +86,11 @@ export function ChooseComboModal({ combo, onClose }: ChooseComboModalProps) {
         >
           <div className="flex items-center justify-between border-b border-tbc-charcoal-border px-6 py-4">
             <div>
-              <h2 id="combo-title" className="text-lg font-semibold">
-                {combo.name}
+              <h2 id="custom-combo-title" className="text-lg font-semibold">
+                {buildYourOwnCombo.name}
               </h2>
               <p className="text-xs text-tbc-cream-dim">
-                Select {combo.chooseCount} drinks — {selectedIds.length}/{combo.chooseCount} chosen
+                Select {buildYourOwnCombo.chooseCount} drinks — {selectedIds.length}/{buildYourOwnCombo.chooseCount} chosen
               </p>
             </div>
             <button
@@ -106,7 +107,7 @@ export function ChooseComboModal({ combo, onClose }: ChooseComboModalProps) {
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {eligibleItems.map((item) => {
                 const selected = selectedIds.includes(item.id);
-                const disabled = !selected && selectedIds.length >= combo.chooseCount;
+                const disabled = !selected && selectedIds.length >= buildYourOwnCombo.chooseCount;
                 return (
                   <button
                     key={item.id}
@@ -135,7 +136,7 @@ export function ChooseComboModal({ combo, onClose }: ChooseComboModalProps) {
           </div>
 
           <div className="flex items-center justify-between border-t border-tbc-charcoal-border px-6 py-4">
-            <span className="text-lg font-bold text-tbc-gold-400">{formatCurrency(combo.comboPrice)}</span>
+            <span className="text-lg font-bold text-tbc-gold-400">{formatCurrency(buildYourOwnCombo.comboPrice)}</span>
             <Button variant="gold" disabled={!isComplete} onClick={handleConfirm}>
               Add Combo to Cart
             </Button>

@@ -31,6 +31,16 @@ export const storeConfig = {
     process.env.NEXT_PUBLIC_GOOGLE_MAPS_URL ||
     'https://www.google.com/maps/search/?api=1&query=Chaturi+Nagar+Road%2C+Rampati+Nagari%2C+New+Chamman+Chak%2C+Beside+Gyan+Ganga+Trade+Centre%2C+Bypass+Road%2C+Patna%2C+Bihar',
   openingHours: '12:00 PM – 12:00 AM, all days (delivery hours)',
+  /**
+   * PLACEHOLDER — the exact street address doesn't resolve via free geocoding
+   * (too new/informal for OpenStreetMap's data), so these default to Patna's
+   * city center, not the actual kitchen. Replace via env vars with the real
+   * coordinates (right-click the kitchen's exact spot in Google Maps, copy
+   * the lat/lng) before relying on the Premium free-delivery radius check —
+   * until then it will be measuring distance from the wrong point.
+   */
+  latitude: Number(process.env.NEXT_PUBLIC_STORE_LAT) || 25.6093239,
+  longitude: Number(process.env.NEXT_PUBLIC_STORE_LNG) || 85.1235252,
 } as const;
 
 export const analyticsConfig = {
@@ -40,12 +50,30 @@ export const analyticsConfig = {
 
 /** Pricing & rewards logic — single source of truth so it never drifts between UI and checkout math. */
 export const pricingConfig = {
-  /** Flat, no-coupon-needed discount applied to every direct website order. */
-  websiteDiscountPercent: 10,
-  loyalty: {
-    firstOrderPercent: 10,
-    returningPercent: 15,
-    goldPercent: 20,
+  /** Order-wide discount by how many shakes/cold coffees are in THIS cart — not order history. */
+  quantityDiscount: {
+    tiers: [
+      { minUnits: 4, percent: 20 },
+      { minUnits: 3, percent: 15 },
+      { minUnits: 2, percent: 10 },
+    ],
+  },
+  /** Flat, always-on discount on combo lines specifically — every order, everyone, independent of quantity/Premium status. */
+  combo: {
+    discountPercent: 15,
+  },
+  /** Premium Members get this flat rate on every order instead of the quantity discount. */
+  premium: {
+    discountPercent: 25,
+    /** Completed orders needed before a customer can opt in. */
+    unlockAfterOrders: 15,
+    /** Straight-line delivery radius (km) within which Premium Members get free delivery. */
+    freeDeliveryRadiusKm: 4,
+  },
+  /** Repeating milestone rewards — see src/lib/rewards-eligibility.ts. */
+  milestoneRewards: {
+    coldCoffee: { every: 6, discountPercent: 50 },
+    freeItem: { every: 10 },
   },
   taxRatePercent: 5,
   deliveryFee: 39,

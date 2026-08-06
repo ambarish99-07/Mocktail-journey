@@ -6,7 +6,7 @@ export interface FixedCombo {
   comboPrice: number;
 }
 
-export interface ChooseNCombo {
+export interface BuildYourOwnCombo {
   id: string;
   name: string;
   description: string;
@@ -16,7 +16,7 @@ export interface ChooseNCombo {
   eligibleCategory: 'signature-shakes' | 'cold-coffee' | null;
 }
 
-/** Curated fixed-item combos. Prices are pre-set bundle prices (website discount still applies at checkout). */
+/** Curated two-shake combos. Prices are pre-set bundle prices (order-wide discounts still apply at checkout). */
 export const fixedCombos: FixedCombo[] = [
   {
     id: 'chocolate-duo',
@@ -55,30 +55,12 @@ export const fixedCombos: FixedCombo[] = [
   },
 ];
 
-/** "Build your own" combos — the customer picks N drinks from the menu at a bundled price. */
-export const chooseNCombos: ChooseNCombo[] = [
-  {
-    id: 'choose-any-two',
-    name: 'Choose Any Two',
-    description: 'Pick any 2 drinks from the full menu at a special bundle price.',
-    chooseCount: 2,
-    comboPrice: 379,
-    eligibleCategory: null,
-  },
-  {
-    id: 'choose-any-four',
-    name: 'Choose Any Four',
-    description: 'Pick any 4 drinks — perfect for sharing with friends.',
-    chooseCount: 4,
-    comboPrice: 729,
-    eligibleCategory: null,
-  },
-  {
-    id: 'choose-any-six',
-    name: 'Choose Any Six',
-    description: 'Pick any 6 drinks — ideal for small gatherings and parties.',
-    chooseCount: 6,
-    comboPrice: 1049,
-    eligibleCategory: null,
-  },
-];
+/** Single "build your own" option — pick any 2 drinks from the full menu at a flat bundle price. */
+export const buildYourOwnCombo: BuildYourOwnCombo = {
+  id: 'create-your-own',
+  name: 'Create Your Own Combo',
+  description: 'Pick any 2 drinks from the full menu at a special bundle price.',
+  chooseCount: 2,
+  comboPrice: 379,
+  eligibleCategory: null,
+};

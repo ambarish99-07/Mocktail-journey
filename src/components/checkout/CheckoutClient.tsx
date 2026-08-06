@@ -12,11 +12,11 @@ import { Container } from '@/components/ui/Container';
 import { Button, buttonClasses } from '@/components/ui/Button';
 import { CartSummary } from '@/components/cart/CartSummary';
 import { useCartStore } from '@/lib/store/cart-store';
-import { useLoyaltyStore, deriveLoyaltyTier } from '@/lib/store/loyalty-store';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useOrderStore } from '@/lib/store/order-store';
 import { computeOrderTotals, ESTIMATED_DELIVERY_MINUTES } from '@/lib/pricing';
-import { isPunchCardRewardOrder, ORDERS_PER_REWARD } from '@/lib/punch-card';
+import { isColdCoffeeRewardOrder, isFreeItemRewardOrder, isPremiumEligible } from '@/lib/rewards-eligibility';
+import { pricingConfig } from '@/lib/config';
 import { checkoutSchema, type CheckoutFormValues } from '@/lib/validation';
 import { shareCurrentLocation, buildWhatsAppMessage, buildWhatsAppLink } from '@/lib/whatsapp';
 import { loadRazorpayScript } from '@/lib/razorpay-client';
@@ -30,7 +30,6 @@ export function CheckoutClient() {
   const router = useRouter();
   const items = useCartStore((s) => s.items);
   const clearCart = useCartStore((s) => s.clearCart);
-  const { completedOrderCount, isGoldMember, recordOrderCompleted } = useLoyaltyStore();
   const authUser = useAuthStore((s) => s.user);
   const setLastOrder = useOrderStore((s) => s.setLastOrder);
 
@@ -50,14 +49,15 @@ export function CheckoutClient() {
     resolver: zodResolver(checkoutSchema),
   });
 
-  // Logged-in customers get their real, server-tracked loyalty/punch-card state
-  // (matching what /api/orders will actually charge); guests fall back to the
-  // device-local simulation. Punch-card rewards are registered-accounts-only.
-  const loyaltyTier = authUser
-    ? deriveLoyaltyTier(authUser.loyalty.completedOrderCount, authUser.loyalty.isGoldMember)
-    : deriveLoyaltyTier(completedOrderCount, isGoldMember);
-  const punchCardReward = authUser ? isPunchCardRewardOrder(authUser.punchCard.ordersSinceReward) : false;
-  const totals = computeOrderTotals(items, { loyaltyTier, punchCardReward });
+  // The quantity discount is purely based on what's in THIS cart, so guests get
+  // it too. Premium/milestone rewards are registered-accounts-only. Note: this
+  // preview can't check the Premium free-delivery radius (that needs server-side
+  // geocoding of the typed address) — the final total on the confirmation page
+  // is always the authoritative one.
+  const isPremiumMember = authUser?.premium.isMember ?? false;
+  const coldCoffeeReward = authUser ? isColdCoffeeRewardOrder(authUser.rewards.coldCoffeeCounter) : false;
+  const freeItemReward = authUser ? isFreeItemRewardOrder(authUser.rewards.freeItemCounter) : false;
+  const totals = computeOrderTotals(items, { isPremiumMember, coldCoffeeReward, freeItemReward });
 
   const handleShareLocation = async () => {
     setLocationStatus('loading');
@@ -74,7 +74,6 @@ export function CheckoutClient() {
 
   const completeOrder = (order: PlacedOrder) => {
     setLastOrder(order);
-    recordOrderCompleted();
     clearCart();
     router.push(`/checkout/confirmation?order=${order.id}`);
   };
@@ -368,12 +367,29 @@ export function CheckoutClient() {
 
           <CartSummary totals={totals} />
 
-          {authUser && !punchCardReward && (
-            <p className="mt-3 text-xs text-tbc-cream-dim">
-              {ORDERS_PER_REWARD - authUser.punchCard.ordersSinceReward} more order
-              {ORDERS_PER_REWARD - authUser.punchCard.ordersSinceReward === 1 ? '' : 's'} until 50% off your
-              cheapest drink.
-            </p>
+          {authUser && !isPremiumMember && (
+            <div className="mt-3 space-y-1">
+              {!coldCoffeeReward && (
+                <p className="text-xs text-tbc-cream-dim">
+                  {pricingConfig.milestoneRewards.coldCoffee.every - authUser.rewards.coldCoffeeCounter} more order
+                  {pricingConfig.milestoneRewards.coldCoffee.every - authUser.rewards.coldCoffeeCounter === 1 ? '' : 's'}{' '}
+                  until 50% off a cold coffee.
+                </p>
+              )}
+              {!freeItemReward && (
+                <p className="text-xs text-tbc-cream-dim">
+                  {pricingConfig.milestoneRewards.freeItem.every - authUser.rewards.freeItemCounter} more order
+                  {pricingConfig.milestoneRewards.freeItem.every - authUser.rewards.freeItemCounter === 1 ? '' : 's'}{' '}
+                  until a free drink.
+                </p>
+              )}
+              {isPremiumEligible(authUser.loyalty.completedOrderCount) && (
+                <p className="text-xs text-tbc-gold-400">
+                  You&apos;ve unlocked Premium Membership — join from your account for{' '}
+                  {pricingConfig.premium.discountPercent}% off every order.
+                </p>
+              )}
+            </div>
           )}
 
           <p className="mt-4 text-xs text-tbc-cream-dim">

@@ -7,24 +7,23 @@ import { MenuFilters } from '@/components/menu/MenuFilters';
 import type { CategoryFilter, SortOption } from '@/components/menu/MenuFilters';
 import { MenuCard } from '@/components/menu/MenuCard';
 import { CustomizeModal } from '@/components/menu/CustomizeModal';
-import { ChooseComboModal } from '@/components/menu/ChooseComboModal';
+import { CreateYourOwnComboModal } from '@/components/menu/CreateYourOwnComboModal';
 import { FadeIn } from '@/components/ui/FadeIn';
 import { menuItems, getMenuItemById } from '@/data/menu';
-import { fixedCombos, chooseNCombos } from '@/data/combos';
+import { fixedCombos, buildYourOwnCombo } from '@/data/combos';
 import { useCartStore } from '@/lib/store/cart-store';
 import { DEFAULT_CUSTOMIZATION } from '@/types/cart';
 import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 import Image from 'next/image';
 import type { MenuItem } from '@/types/menu';
-import type { ChooseNCombo } from '@/data/combos';
 
 export function MenuPageClient() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<CategoryFilter>('all');
   const [sort, setSort] = useState<SortOption>('popularity');
   const [customizing, setCustomizing] = useState<MenuItem | null>(null);
-  const [buildingCombo, setBuildingCombo] = useState<ChooseNCombo | null>(null);
+  const [buildingCombo, setBuildingCombo] = useState(false);
 
   const addItem = useCartStore((s) => s.addItem);
 
@@ -58,11 +57,26 @@ export function MenuPageClient() {
   const staffPicks = menuItems.filter((m) => m.isStaffPick);
   const trending = menuItems.filter((m) => m.isPopular);
 
-  const addComboToCart = (itemIds: string[]) => {
-    itemIds.forEach((id) => {
-      const menuItem = getMenuItemById(id);
-      if (menuItem) addItem(menuItem, 1, DEFAULT_CUSTOMIZATION);
-    });
+  // Added as ONE synthetic line at the combo's bundle price (not each real
+  // item at full price) — see order-revalidation.ts for the server-side match.
+  const addComboToCart = (combo: (typeof fixedCombos)[number]) => {
+    const items = combo.itemIds.map((id) => getMenuItemById(id)).filter((i): i is MenuItem => Boolean(i));
+    const first = items[0];
+    if (!first) return;
+    addItem(
+      {
+        id: `combo:fixed:${combo.id}`,
+        signatureName: combo.name,
+        commonName: items.map((i) => i.signatureName).join(' + '),
+        description: combo.description,
+        price: combo.comboPrice,
+        category: first.category,
+        image: first.image,
+        flavorBadges: [],
+      },
+      1,
+      DEFAULT_CUSTOMIZATION
+    );
   };
 
   return (
@@ -113,7 +127,13 @@ export function MenuPageClient() {
 
       <section className="bg-tbc-charcoal/40 py-16 sm:py-20">
         <Container>
-          <SectionHeading eyebrow="Better Together" title="Combo Offers" align="left" className="mx-0" />
+          <SectionHeading
+            eyebrow="Better Together"
+            title="Combo Offers"
+            description="Curated two-shake pairings at a bundled price."
+            align="left"
+            className="mx-0"
+          />
 
           <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {fixedCombos.map((combo) => (
@@ -139,7 +159,7 @@ export function MenuPageClient() {
                     <span className="text-lg font-bold text-tbc-gold-400">
                       {formatCurrency(combo.comboPrice)}
                     </span>
-                    <Button variant="emerald" size="sm" onClick={() => addComboToCart(combo.itemIds)}>
+                    <Button variant="emerald" size="sm" onClick={() => addComboToCart(combo)}>
                       Add Combo
                     </Button>
                   </div>
@@ -147,29 +167,24 @@ export function MenuPageClient() {
               </div>
             ))}
 
-            {chooseNCombos.map((combo) => (
-              <div
-                key={combo.id}
-                className="flex flex-col overflow-hidden rounded-xl2 border border-tbc-gold-400/30 bg-tbc-charcoal-light p-5"
-              >
-                <h3 className="font-heading text-lg font-semibold">{combo.name}</h3>
-                <p className="mt-1.5 flex-1 text-sm text-tbc-cream-muted">{combo.description}</p>
-                <div className="mt-4 flex items-center justify-between">
-                  <span className="text-lg font-bold text-tbc-gold-400">
-                    {formatCurrency(combo.comboPrice)}
-                  </span>
-                  <Button variant="gold" size="sm" onClick={() => setBuildingCombo(combo)}>
-                    Build Combo
-                  </Button>
-                </div>
+            <div className="flex flex-col overflow-hidden rounded-xl2 border border-tbc-gold-400/30 bg-tbc-charcoal-light p-5">
+              <h3 className="font-heading text-lg font-semibold">{buildYourOwnCombo.name}</h3>
+              <p className="mt-1.5 flex-1 text-sm text-tbc-cream-muted">{buildYourOwnCombo.description}</p>
+              <div className="mt-4 flex items-center justify-between">
+                <span className="text-lg font-bold text-tbc-gold-400">
+                  {formatCurrency(buildYourOwnCombo.comboPrice)}
+                </span>
+                <Button variant="gold" size="sm" onClick={() => setBuildingCombo(true)}>
+                  Build Combo
+                </Button>
               </div>
-            ))}
+            </div>
           </div>
         </Container>
       </section>
 
       <CustomizeModal item={customizing} onClose={() => setCustomizing(null)} />
-      <ChooseComboModal combo={buildingCombo} onClose={() => setBuildingCombo(null)} />
+      <CreateYourOwnComboModal open={buildingCombo} onClose={() => setBuildingCombo(false)} />
     </>
   );
 }

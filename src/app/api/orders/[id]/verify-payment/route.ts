@@ -73,7 +73,10 @@ export async function POST(request: Request, { params }: { params: { id: string 
   await notifyAdminNewOrder(paidOrder);
   await orders.updateOne({ _id: order._id }, { $set: { 'whatsapp.adminNotifiedAt': new Date().toISOString() } });
   if (order.userId) {
-    await recordCompletedOrderForUser(order.userId, order.punchCardRewardApplied);
+    await recordCompletedOrderForUser(order.userId, {
+      coldCoffeeRewardApplied: order.coldCoffeeRewardApplied,
+      freeItemRewardApplied: order.freeItemRewardApplied,
+    });
   }
 
   return NextResponse.json({ order: toPlacedOrder(paidOrder) });

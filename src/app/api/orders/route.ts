@@ -3,9 +3,9 @@ import { ObjectId } from 'mongodb';
 import crypto from 'node:crypto';
 import { checkoutSchema } from '@/lib/validation';
 import { computeOrderTotals, ESTIMATED_DELIVERY_MINUTES } from '@/lib/pricing';
-import { deriveLoyaltyTier } from '@/lib/loyalty';
-import { isPunchCardRewardOrder } from '@/lib/punch-card';
+import { isColdCoffeeRewardOrder, isFreeItemRewardOrder } from '@/lib/rewards-eligibility';
 import { recordCompletedOrderForUser } from '@/lib/user-rewards';
+import { resolveDeliveryCoordinates, haversineDistanceKm } from '@/lib/geo';
 import { generateOrderId } from '@/lib/utils';
 import { getSession } from '@/lib/auth/server';
 import { getOrdersCollection, getUsersCollection } from '@/lib/db/collections';
@@ -14,7 +14,8 @@ import { notifyAdminNewOrder } from '@/lib/whatsapp-server';
 import { getRazorpayClient } from '@/lib/razorpay';
 import { toPlacedOrder } from '@/lib/order-mapping';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
-import type { OrderDoc } from '@/types/db';
+import { storeConfig, pricingConfig } from '@/lib/config';
+import type { OrderDoc, UserDoc } from '@/types/db';
 
 /** Order history for the signed-in user, newest first. Powers /account. */
 export async function GET() {
@@ -63,25 +64,44 @@ export async function POST(request: Request) {
     throw err;
   }
 
-  // Best-effort session read — guest checkout is fully supported. The punch-card
-  // reward is registered-accounts-only, so it stays false/unused for guests.
+  const delivery = deliveryResult.data;
+
+  // Best-effort session read — guest checkout is fully supported. Premium
+  // membership and the milestone rewards are registered-accounts-only, so
+  // they stay false/unused for guests; guests still get the quantity discount.
   const session = await getSession();
   let userId: ObjectId | null = null;
-  let loyaltyTier = null as ReturnType<typeof deriveLoyaltyTier> | null;
-  let punchCardReward = false;
+  let user: UserDoc | null = null;
   if (session) {
     const users = await getUsersCollection();
-    const user = await users.findOne({ _id: new ObjectId(session.userId) });
-    if (user) {
-      userId = user._id;
-      loyaltyTier = deriveLoyaltyTier(user.loyalty.completedOrderCount, user.loyalty.isGoldMember);
-      punchCardReward = isPunchCardRewardOrder(user.punchCard?.ordersSinceReward ?? 0);
+    user = await users.findOne({ _id: new ObjectId(session.userId) });
+    if (user) userId = user._id;
+  }
+
+  const isPremiumMember = user?.premium.isMember ?? false;
+  const coldCoffeeReward = user ? isColdCoffeeRewardOrder(user.rewards.coldCoffeeCounter) : false;
+  const freeItemReward = user ? isFreeItemRewardOrder(user.rewards.freeItemCounter) : false;
+
+  // Distance is only worth resolving for Premium Members — geocoding a typed
+  // address costs a network round-trip, skip it entirely otherwise.
+  let deliveryDistanceKm: number | null = null;
+  let freeDeliveryEligible = false;
+  if (isPremiumMember) {
+    const fullAddress = [delivery.address, delivery.city, delivery.pincode].filter(Boolean).join(', ');
+    const coords = await resolveDeliveryCoordinates(delivery.mapsLink, fullAddress);
+    if (coords) {
+      deliveryDistanceKm = haversineDistanceKm({ lat: storeConfig.latitude, lng: storeConfig.longitude }, coords);
+      freeDeliveryEligible = deliveryDistanceKm <= pricingConfig.premium.freeDeliveryRadiusKm;
     }
   }
 
-  const totals = computeOrderTotals(items, { loyaltyTier, punchCardReward });
+  const totals = computeOrderTotals(items, {
+    isPremiumMember,
+    coldCoffeeReward,
+    freeItemReward,
+    freeDeliveryEligible,
+  });
   const now = new Date().toISOString();
-  const delivery = deliveryResult.data;
 
   const orderDoc: Omit<OrderDoc, '_id'> = {
     accessToken: crypto.randomBytes(24).toString('base64url'),
@@ -98,13 +118,15 @@ export async function POST(request: Request) {
       specialInstructions: delivery.specialInstructions || undefined,
     },
     totals,
-    loyaltyTierAtOrder: loyaltyTier,
+    isPremiumOrder: isPremiumMember,
+    coldCoffeeRewardApplied: coldCoffeeReward,
+    freeItemRewardApplied: freeItemReward,
+    deliveryDistanceKm,
     estimatedMinutes: ESTIMATED_DELIVERY_MINUTES,
     status: 'received',
     statusHistory: [{ status: 'received', at: now }],
     payment: { method: paymentMethod, status: 'pending' },
     whatsapp: { customerNotifiedStatuses: [] },
-    punchCardRewardApplied: punchCardReward,
     createdAt: now,
     updatedAt: now,
   };
@@ -125,7 +147,8 @@ export async function POST(request: Request) {
     const result = await orders.insertOne(orderDoc as OrderDoc);
     const saved: OrderDoc = { ...orderDoc, _id: result.insertedId };
 
-    // Not confirmed yet — the admin alert fires only after payment verification succeeds.
+    // Not confirmed yet — the admin alert and reward counters fire only after
+    // payment verification succeeds.
     return NextResponse.json(
       {
         order: toPlacedOrder(saved),
@@ -148,7 +171,10 @@ export async function POST(request: Request) {
   await notifyAdminNewOrder(saved);
   await orders.updateOne({ _id: saved._id }, { $set: { 'whatsapp.adminNotifiedAt': new Date().toISOString() } });
   if (userId) {
-    await recordCompletedOrderForUser(userId, punchCardReward);
+    await recordCompletedOrderForUser(userId, {
+      coldCoffeeRewardApplied: coldCoffeeReward,
+      freeItemRewardApplied: freeItemReward,
+    });
   }
 
   return NextResponse.json({ order: toPlacedOrder(saved) }, { status: 201 });
