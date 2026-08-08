@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Container } from '@/components/ui/Container';
 import { AdminOrdersTable } from '@/components/admin/AdminOrdersTable';
+import { NewOrderAlertSystem } from '@/components/admin/NewOrderAlertSystem';
 
 export const metadata: Metadata = {
   title: 'Admin — Orders',
@@ -13,6 +14,7 @@ export default function AdminPage() {
       <h1 className="text-3xl font-semibold sm:text-4xl">Orders</h1>
       <p className="mt-1 text-tbc-cream-muted">Incoming orders across the website, refreshed automatically.</p>
       <div className="mt-8">
+        <NewOrderAlertSystem />
         <AdminOrdersTable />
       </div>
     </Container>
