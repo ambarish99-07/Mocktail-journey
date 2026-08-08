@@ -206,7 +206,7 @@ function RecommendationStrip({ title, items }: { title: string; items: MenuItem[
             <button
               type="button"
               onClick={() => addItem(item, 1, DEFAULT_CUSTOMIZATION)}
-              className="rounded-full bg-tbc-gold-400 py-1 text-[11px] font-semibold text-tbc-black"
+              className="rounded-full bg-tbc-gold-400 py-1 text-[11px] font-semibold text-black"
             >
               Quick Add
             </button>

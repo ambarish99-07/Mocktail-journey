@@ -8,7 +8,7 @@ interface PageHeroProps {
 
 export function PageHero({ eyebrow, title, description }: PageHeroProps) {
   return (
-    <section className="border-b border-white/5 bg-tbc-charcoal/40 py-16 sm:py-20">
+    <section className="border-b border-tbc-cream/5 bg-tbc-charcoal/40 py-16 sm:py-20">
       <Container>
         <span className="mb-3 inline-block text-sm font-semibold uppercase tracking-[0.2em] text-tbc-gold-400">
           {eyebrow}

@@ -49,7 +49,7 @@ export function RecommendedAddOns() {
               type="button"
               aria-label={`Add ${item.signatureName} to cart`}
               onClick={() => addItem(item, 1, DEFAULT_CUSTOMIZATION)}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-tbc-gold-400 text-tbc-black transition-transform hover:scale-105"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-tbc-gold-400 text-black transition-transform hover:scale-105"
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
             </button>

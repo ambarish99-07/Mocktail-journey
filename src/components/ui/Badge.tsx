@@ -33,7 +33,7 @@ export function Tag({ className, children, ...props }: HTMLAttributes<HTMLSpanEl
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full bg-tbc-gold-400 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-tbc-black',
+        'inline-flex items-center rounded-full bg-tbc-gold-400 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-black',
         className
       )}
       {...props}

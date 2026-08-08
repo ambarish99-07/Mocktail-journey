@@ -41,7 +41,7 @@ export function InstagramGallery() {
                   sizes="(min-width: 1024px) 16vw, 33vw"
                   className="object-cover transition-transform duration-500 group-hover:scale-110"
                 />
-                <div className="absolute inset-0 flex items-center justify-center bg-tbc-black/0 transition-colors group-hover:bg-tbc-black/40">
+                <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/40">
                   <Instagram
                     className="h-6 w-6 text-white opacity-0 transition-opacity group-hover:opacity-100"
                     aria-hidden="true"

@@ -38,11 +38,13 @@ export function FeaturedDrinks() {
                     sizes="(min-width: 1024px) 22vw, 45vw"
                     className="object-cover transition-transform duration-700 group-hover:scale-110"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-tbc-black via-tbc-black/20 to-transparent" />
+                  {/* Pinned black, not the theme token — darkens the photo for the
+                      caption below regardless of site theme. */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
                 </div>
 
                 <div className="absolute inset-x-0 bottom-0 p-4">
-                  <h3 className="font-heading text-base font-semibold sm:text-lg">
+                  <h3 className="font-heading text-base font-semibold text-[#F4EDE0] sm:text-lg">
                     {item.signatureName}
                   </h3>
                   <div className="mt-1 flex items-center justify-between">
@@ -53,7 +55,7 @@ export function FeaturedDrinks() {
                       type="button"
                       aria-label={`Add ${item.signatureName} to cart`}
                       onClick={() => addItem(item, 1, DEFAULT_CUSTOMIZATION)}
-                      className="flex h-8 w-8 items-center justify-center rounded-full bg-tbc-gold-400 text-tbc-black transition-transform hover:scale-110"
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-tbc-gold-400 text-black transition-transform hover:scale-110"
                     >
                       <Plus className="h-4 w-4" aria-hidden="true" />
                     </button>

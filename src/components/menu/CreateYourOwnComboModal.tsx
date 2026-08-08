@@ -123,7 +123,7 @@ export function CreateYourOwnComboModal({ open, onClose }: CreateYourOwnComboMod
                     <div className="relative aspect-square">
                       <Image src={item.image} alt="" fill sizes="150px" className="object-cover" />
                       {selected && (
-                        <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-tbc-gold-400 text-tbc-black">
+                        <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-tbc-gold-400 text-black">
                           <Check className="h-4 w-4" aria-hidden="true" />
                         </span>
                       )}

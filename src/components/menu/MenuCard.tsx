@@ -47,7 +47,7 @@ export function MenuCard({ item, onCustomize }: MenuCardProps) {
           aria-label={isFavorite ? `Remove ${item.signatureName} from favourites` : `Add ${item.signatureName} to favourites`}
           aria-pressed={isFavorite}
           onClick={() => toggleFavorite(item.id)}
-          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-tbc-black/50 text-tbc-cream backdrop-blur-sm transition-colors hover:bg-tbc-black/70"
+          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition-colors hover:bg-black/70"
         >
           <Heart
             className={cn('h-4 w-4', isFavorite && 'fill-tbc-gold-400 text-tbc-gold-400')}

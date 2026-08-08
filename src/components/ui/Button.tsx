@@ -11,7 +11,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
-  gold: 'bg-gold-gradient text-tbc-black font-semibold shadow-gold-glow hover:brightness-110 active:brightness-95',
+  gold: 'bg-gold-gradient text-black font-semibold shadow-gold-glow hover:brightness-110 active:brightness-95',
   emerald:
     'bg-tbc-emerald-500 text-tbc-cream font-semibold shadow-emerald-glow hover:bg-tbc-emerald-400 active:bg-tbc-emerald-600',
   whatsapp: 'bg-[#25D366] text-black font-semibold hover:brightness-105 active:brightness-95',
@@ -19,7 +19,7 @@ const variantClasses: Record<ButtonVariant, string> = {
   // orange fails contrast (~2.5:1), so it gets dark text instead — same
   // light-background pattern as the `gold` variant.
   zomato: 'bg-[#E23744] text-white font-semibold hover:brightness-110 active:brightness-95',
-  swiggy: 'bg-[#FC8019] text-tbc-black font-semibold hover:brightness-105 active:brightness-95',
+  swiggy: 'bg-[#FC8019] text-black font-semibold hover:brightness-105 active:brightness-95',
   outline:
     'border border-tbc-gold-400/60 text-tbc-cream hover:bg-tbc-gold-400/10 active:bg-tbc-gold-400/15',
   ghost: 'text-tbc-cream hover:bg-tbc-charcoal-light',

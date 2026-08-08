@@ -18,8 +18,11 @@ export function Hero() {
           sizes="100vw"
           className="object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-tbc-black via-tbc-black/80 to-tbc-black/40" />
-        <div className="absolute inset-0 bg-gradient-to-r from-tbc-black/70 via-transparent to-transparent" />
+        {/* Pinned to literal black, not the theme token — this darkens a photograph
+            for text legibility and shouldn't lighten just because the site is in
+            light mode. Same reasoning for the badge/heading/subtext colors below. */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-black/40" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-transparent to-transparent" />
       </div>
 
       <Container className="flex min-h-[85vh] flex-col items-start justify-center py-24">
@@ -27,7 +30,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mb-5 inline-block rounded-full border border-tbc-gold-400/40 bg-tbc-black/40 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-tbc-gold-400 backdrop-blur-sm"
+          className="mb-5 inline-block rounded-full border border-tbc-gold-400/40 bg-black/40 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-tbc-gold-400 backdrop-blur-sm"
         >
           Premium Cloud Kitchen
         </motion.span>
@@ -36,7 +39,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="max-w-3xl text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl 2xl:text-7xl"
+          className="max-w-3xl text-4xl font-semibold leading-tight text-[#F4EDE0] sm:text-5xl lg:text-6xl 2xl:text-7xl"
         >
           {siteConfig.tagline}
         </motion.h1>
@@ -45,7 +48,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="mt-5 max-w-xl text-lg text-tbc-cream-muted 2xl:text-xl"
+          className="mt-5 max-w-xl text-lg text-[#C9C1B2] 2xl:text-xl"
         >
           {siteConfig.description}
         </motion.p>

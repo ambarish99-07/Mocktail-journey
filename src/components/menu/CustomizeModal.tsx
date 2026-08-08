@@ -188,7 +188,7 @@ function ChoiceChip({
       onClick={onClick}
       className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
         selected
-          ? 'border-tbc-gold-400 bg-tbc-gold-400 text-tbc-black'
+          ? 'border-tbc-gold-400 bg-tbc-gold-400 text-black'
           : 'border-tbc-charcoal-border text-tbc-cream-muted hover:border-tbc-gold-400/50'
       }`}
     >

@@ -62,7 +62,7 @@ export default function CateringPage() {
                   }`}
                 >
                   {pkg.id === 'classic' && (
-                    <span className="mb-3 inline-flex items-center gap-1 rounded-full bg-tbc-gold-400 px-2.5 py-1 text-xs font-semibold text-tbc-black">
+                    <span className="mb-3 inline-flex items-center gap-1 rounded-full bg-tbc-gold-400 px-2.5 py-1 text-xs font-semibold text-black">
                       <Star className="h-3 w-3" aria-hidden="true" /> Most Popular
                     </span>
                   )}

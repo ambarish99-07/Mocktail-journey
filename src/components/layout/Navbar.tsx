@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 import { Menu, ShoppingBag, ShoppingCart, User, X } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
 import { buttonClasses } from '@/components/ui/Button';
+import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { navLinks } from '@/lib/config';
 import { useCartCount, useCartStore } from '@/lib/store/cart-store';
 import { useAuthStore } from '@/lib/store/auth-store';
@@ -50,7 +51,7 @@ export function Navbar() {
       <Container>
         <nav
           aria-label="Primary"
-          className="flex h-20 items-center justify-between border-b border-white/5"
+          className="flex h-20 items-center justify-between border-b border-tbc-cream/5"
         >
           <Link href="/" className="flex items-center gap-2.5">
             <Image
@@ -95,7 +96,7 @@ export function Navbar() {
             <Link
               href="/menu"
               aria-label="Order Now"
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-gold-gradient text-tbc-black shadow-gold-glow transition-transform hover:scale-105 sm:hidden"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-gold-gradient text-black shadow-gold-glow transition-transform hover:scale-105 sm:hidden"
             >
               <ShoppingBag className="h-5 w-5" aria-hidden="true" />
             </Link>
@@ -125,6 +126,8 @@ export function Navbar() {
               <User className="h-5 w-5" aria-hidden="true" />
             </Link>
 
+            <ThemeToggle className="hidden sm:flex" />
+
             <button
               type="button"
               aria-label={isMobileOpen ? 'Close menu' : 'Open menu'}
@@ -139,7 +142,7 @@ export function Navbar() {
       </Container>
 
       {isMobileOpen && (
-        <div className="border-b border-white/5 bg-tbc-black lg:hidden">
+        <div className="border-b border-tbc-cream/5 bg-tbc-black lg:hidden">
           <Container>
             <Link href="/menu" className={cn(buttonClasses('gold', 'md'), 'mt-4 w-full')}>
               Order Now
@@ -159,6 +162,10 @@ export function Navbar() {
                 </li>
               ))}
             </ul>
+            <div className="flex items-center justify-between border-t border-tbc-cream/5 py-4 sm:hidden">
+              <span className="text-sm font-medium text-tbc-cream-muted">Appearance</span>
+              <ThemeToggle />
+            </div>
           </Container>
         </div>
       )}

@@ -3,8 +3,41 @@
 @tailwind utilities;
 
 @layer base {
+  /*
+   * Theme tokens as CSS variables (RGB triplets, so Tailwind's `rgb(var(--x) /
+   * <alpha-value>)` pattern in tailwind.config.ts keeps opacity modifiers like
+   * bg-tbc-black/90 working). :root holds the light theme; .dark overrides it
+   * — next-themes toggles the `.dark` class on <html>. Gold/emerald accents
+   * are NOT theme tokens — they stay static hex in tailwind.config.ts so the
+   * brand accent reads identically in both themes.
+   *
+   * Note: a few places in the app (hero/product-card photo overlays, and text
+   * sitting on the static gold accent) intentionally use literal black/white
+   * instead of these tokens, because a photograph's darkening scrim or a gold
+   * button's contrast text shouldn't flip with the site theme.
+   */
   :root {
+    color-scheme: light;
+    --tbc-black: 244 237 224; /* page background */
+    --tbc-black-soft: 249 245 235;
+    --tbc-charcoal: 255 255 255; /* secondary background / surface */
+    --tbc-charcoal-light: 247 241 228; /* card surface */
+    --tbc-charcoal-border: 227 217 194;
+    --tbc-cream: 34 31 26; /* primary body text */
+    --tbc-cream-muted: 91 83 71;
+    --tbc-cream-dim: 139 130 114;
+  }
+
+  .dark {
     color-scheme: dark;
+    --tbc-black: 10 10 11;
+    --tbc-black-soft: 15 15 17;
+    --tbc-charcoal: 24 25 28;
+    --tbc-charcoal-light: 34 35 39;
+    --tbc-charcoal-border: 44 45 50;
+    --tbc-cream: 244 237 224;
+    --tbc-cream-muted: 201 193 178;
+    --tbc-cream-dim: 143 137 124;
   }
 
   * {
@@ -16,7 +49,7 @@
   }
 
   body {
-    @apply bg-tbc-black text-tbc-cream font-body antialiased;
+    @apply bg-tbc-black text-tbc-cream font-body antialiased transition-colors duration-300;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -60,7 +93,7 @@
   /* Skip-to-content link, visible only on keyboard focus */
   .skip-link {
     @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100]
-      focus:rounded-full focus:bg-tbc-gold-400 focus:px-5 focus:py-2.5 focus:text-tbc-black
+      focus:rounded-full focus:bg-tbc-gold-400 focus:px-5 focus:py-2.5 focus:text-black
       focus:font-semibold;
   }
 

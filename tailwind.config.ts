@@ -10,14 +10,20 @@ const config: Config = {
     extend: {
       colors: {
         // --- The Blenders Club brand palette ---
+        // tbc-black/tbc-charcoal/tbc-cream resolve through CSS variables (see
+        // globals.css) so they swap value between light/dark themes — every
+        // component that uses these tokens for page chrome (backgrounds,
+        // surfaces, borders, body text) gets theme-awareness for free.
+        // Gold/emerald accents and any color pinned against a photo or a gold
+        // surface intentionally stay static hex — see globals.css comment.
         'tbc-black': {
-          DEFAULT: '#0A0A0B', // primary background — matte black
-          soft: '#0F0F11',
+          DEFAULT: 'rgb(var(--tbc-black) / <alpha-value>)', // page background
+          soft: 'rgb(var(--tbc-black-soft) / <alpha-value>)',
         },
         'tbc-charcoal': {
-          DEFAULT: '#18191C', // secondary background
-          light: '#222327', // card / surface
-          border: '#2C2D32',
+          DEFAULT: 'rgb(var(--tbc-charcoal) / <alpha-value>)', // secondary background
+          light: 'rgb(var(--tbc-charcoal-light) / <alpha-value>)', // card / surface
+          border: 'rgb(var(--tbc-charcoal-border) / <alpha-value>)',
         },
         'tbc-emerald': {
           50: '#E6F5EE',
@@ -44,9 +50,9 @@ const config: Config = {
           900: '#3A2E0C',
         },
         'tbc-cream': {
-          DEFAULT: '#F4EDE0', // primary text on dark surfaces
-          muted: '#C9C1B2',
-          dim: '#8F897C',
+          DEFAULT: 'rgb(var(--tbc-cream) / <alpha-value>)', // primary body text
+          muted: 'rgb(var(--tbc-cream-muted) / <alpha-value>)',
+          dim: 'rgb(var(--tbc-cream-dim) / <alpha-value>)',
         },
       },
       fontFamily: {

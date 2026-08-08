@@ -1,12 +1,13 @@
 import type { Metadata } from 'next';
 import { Playfair_Display, Manrope } from 'next/font/google';
-import { Toaster } from 'sonner';
 import './globals.css';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { CartDrawer } from '@/components/cart/CartDrawer';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
 import { MicrosoftClarity } from '@/components/analytics/MicrosoftClarity';
+import { ThemeProvider } from '@/components/providers/ThemeProvider';
+import { AppToaster } from '@/components/providers/AppToaster';
 import { siteConfig, storeConfig } from '@/lib/config';
 
 const heading = Playfair_Display({
@@ -84,16 +85,18 @@ function LocalBusinessJsonLd() {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${heading.variable} ${body.variable}`}>
+    <html lang="en" className={`${heading.variable} ${body.variable}`} suppressHydrationWarning>
       <body className="bg-noise-overlay">
-        <LocalBusinessJsonLd />
-        <Navbar />
-        <main id="main-content">{children}</main>
-        <Footer />
-        <CartDrawer />
-        <Toaster theme="dark" position="top-center" richColors />
-        <GoogleAnalytics />
-        <MicrosoftClarity />
+        <ThemeProvider>
+          <LocalBusinessJsonLd />
+          <Navbar />
+          <main id="main-content">{children}</main>
+          <Footer />
+          <CartDrawer />
+          <AppToaster />
+          <GoogleAnalytics />
+          <MicrosoftClarity />
+        </ThemeProvider>
       </body>
     </html>
   );

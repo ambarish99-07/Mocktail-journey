@@ -64,7 +64,7 @@ export function MenuFilters({
               className={cn(
                 'rounded-full border px-4 py-2 text-sm font-medium transition-colors',
                 category === c.value
-                  ? 'border-tbc-gold-400 bg-tbc-gold-400 text-tbc-black'
+                  ? 'border-tbc-gold-400 bg-tbc-gold-400 text-black'
                   : 'border-tbc-charcoal-border text-tbc-cream-muted hover:border-tbc-gold-400/50'
               )}
             >
