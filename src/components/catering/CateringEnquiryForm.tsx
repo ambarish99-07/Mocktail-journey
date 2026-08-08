@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
 import { cateringEnquirySchema, type CateringEnquiryFormValues } from '@/lib/validation';
 import { FormField, inputClass } from '@/components/ui/FormField';
 import { Button } from '@/components/ui/Button';
@@ -19,12 +20,22 @@ export function CateringEnquiryForm() {
   } = useForm<CateringEnquiryFormValues>({ resolver: zodResolver(cateringEnquirySchema) });
 
   const onSubmit = async (data: CateringEnquiryFormValues) => {
-    // TODO: replace with a real backend/CRM endpoint once available.
-    // eslint-disable-next-line no-console
-    console.log('Catering enquiry (placeholder):', data);
-    await new Promise((r) => setTimeout(r, 400));
-    setSubmitted(true);
-    reset();
+    try {
+      const res = await fetch('/api/catering', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        toast.error(body?.error ?? 'Could not send your enquiry. Please try again.');
+        return;
+      }
+      setSubmitted(true);
+      reset();
+    } catch {
+      toast.error('Could not send your enquiry. Please check your connection and try again.');
+    }
   };
 
   if (submitted) {

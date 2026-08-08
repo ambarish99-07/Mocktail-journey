@@ -72,6 +72,36 @@ export interface UserDoc {
   updatedAt: string;
 }
 
+export type LeadType = 'contact' | 'catering' | 'franchise';
+export type LeadStatus = 'new' | 'contacted' | 'closed';
+
+/**
+ * MongoDB `leads` collection document — backs the contact, catering enquiry,
+ * and franchise application forms. One collection with a `type` discriminator
+ * (rather than three) so the admin dashboard can list/filter them together;
+ * fields not relevant to a given `type` are simply omitted.
+ */
+export interface LeadDoc {
+  _id: ObjectId;
+  type: LeadType;
+  status: LeadStatus;
+  name: string;
+  email: string;
+  phone: string;
+  /** contact: the message itself. catering/franchise: optional extra details. */
+  message?: string;
+  /** catering only */
+  eventType?: string;
+  eventDate?: string;
+  guestCount?: number;
+  /** franchise only */
+  city?: string;
+  investmentBudget?: string;
+  experience?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 /** Safe-to-return-to-client projection of UserDoc — never includes passwordHash. */
 export interface SafeUser {
   id: string;

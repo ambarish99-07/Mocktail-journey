@@ -1,4 +1,4 @@
-import type { OrderDoc, UserDoc } from '@/types/db';
+import type { LeadDoc, OrderDoc, UserDoc } from '@/types/db';
 import { getDb } from './mongodb';
 
 let indexesEnsured: Promise<unknown> | null = null;
@@ -12,6 +12,9 @@ function ensureIndexes(db: Awaited<ReturnType<typeof getDb>>) {
       db.collection<OrderDoc>('orders').createIndex({ userId: 1 }),
       db.collection<OrderDoc>('orders').createIndex({ status: 1 }),
       db.collection<OrderDoc>('orders').createIndex({ accessToken: 1 }, { sparse: true }),
+      db.collection<LeadDoc>('leads').createIndex({ type: 1 }),
+      db.collection<LeadDoc>('leads').createIndex({ status: 1 }),
+      db.collection<LeadDoc>('leads').createIndex({ createdAt: -1 }),
     ]).catch((err) => {
       console.error('[db] index creation failed', err);
       indexesEnsured = null; // allow retry on next call rather than permanently swallowing the error
@@ -30,4 +33,10 @@ export async function getOrdersCollection() {
   const db = await getDb();
   await ensureIndexes(db);
   return db.collection<OrderDoc>('orders');
+}
+
+export async function getLeadsCollection() {
+  const db = await getDb();
+  await ensureIndexes(db);
+  return db.collection<LeadDoc>('leads');
 }
