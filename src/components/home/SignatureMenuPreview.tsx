@@ -29,7 +29,7 @@ export function SignatureMenuPreview() {
 
         <div className="mt-12 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
           {preview.map((item, i) => (
-            <FadeIn key={item.id} delay={(i % 4) * 0.06}>
+            <FadeIn key={item.id} delay={(i % 4) * 0.06} className="h-full">
               <MenuCard item={item} onCustomize={setCustomizing} />
             </FadeIn>
           ))}

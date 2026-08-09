@@ -116,7 +116,7 @@ export function MenuPageClient() {
           ) : (
             <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
               {filtered.map((item, i) => (
-                <FadeIn key={item.id} delay={(i % 4) * 0.05}>
+                <FadeIn key={item.id} delay={(i % 4) * 0.05} className="h-full">
                   <MenuCard item={item} onCustomize={setCustomizing} />
                 </FadeIn>
               ))}

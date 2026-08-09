@@ -22,7 +22,7 @@
     --tbc-black-soft: 250 250 250;
     --tbc-charcoal: 255 255 255; /* secondary background / surface */
     --tbc-charcoal-light: 247 247 248; /* card surface */
-    --tbc-charcoal-border: 227 227 230;
+    --tbc-charcoal-border: 236 236 239; /* kept subtle/low-contrast — borders should read as a hairline, not a stroke */
     --tbc-cream: 34 31 26; /* primary body text */
     --tbc-cream-muted: 91 83 71;
     --tbc-cream-dim: 139 130 114;

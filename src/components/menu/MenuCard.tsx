@@ -29,7 +29,7 @@ export function MenuCard({ item, onCustomize }: MenuCardProps) {
     <motion.article
       whileHover={{ y: -6 }}
       transition={{ duration: 0.25, ease: 'easeOut' }}
-      className="group flex flex-col overflow-hidden rounded-xl2 border border-tbc-charcoal-border bg-tbc-charcoal-light"
+      className="group flex h-full flex-col overflow-hidden rounded-xl2 border border-tbc-charcoal-border bg-tbc-charcoal-light"
     >
       <div className="relative aspect-square overflow-hidden">
         <Image
@@ -79,12 +79,18 @@ export function MenuCard({ item, onCustomize }: MenuCardProps) {
           </button>
         </div>
 
-        <div className="mt-3 flex items-center gap-2">
-          <QuantitySelector size="sm" quantity={quantity} onChange={setQuantity} label={`${item.signatureName} quantity`} />
+        <div className="mt-3 flex flex-col gap-2">
+          <QuantitySelector
+            size="sm"
+            quantity={quantity}
+            onChange={setQuantity}
+            label={`${item.signatureName} quantity`}
+            className="w-full justify-center"
+          />
           <Button
             variant="emerald"
             size="sm"
-            className="flex-1"
+            className="w-full"
             onClick={() => addItem(item, quantity, DEFAULT_CUSTOMIZATION)}
           >
             Add to Cart

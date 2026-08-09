@@ -9,7 +9,8 @@ import { menuItems } from '@/data/menu';
 import { DEFAULT_CUSTOMIZATION } from '@/types/cart';
 import { Button } from '@/components/ui/Button';
 import { useCartStore } from '@/lib/store/cart-store';
-import { formatCurrency, cn } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { pricingConfig } from '@/lib/config';
 
 interface CreateYourOwnComboModalProps {
   open: boolean;
@@ -136,7 +137,9 @@ export function CreateYourOwnComboModal({ open, onClose }: CreateYourOwnComboMod
           </div>
 
           <div className="flex items-center justify-between border-t border-tbc-charcoal-border px-6 py-4">
-            <span className="text-lg font-bold text-tbc-gold-400">{formatCurrency(buildYourOwnCombo.comboPrice)}</span>
+            <span className="text-lg font-bold text-tbc-gold-400">
+              {pricingConfig.combo.discountPercent}% OFF
+            </span>
             <Button variant="gold" disabled={!isComplete} onClick={handleConfirm}>
               Add Combo to Cart
             </Button>

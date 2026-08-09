@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, ShoppingBag, ShoppingCart, User, X } from 'lucide-react';
+import { MoreHorizontal, ShoppingCart, User, X } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
 import { buttonClasses } from '@/components/ui/Button';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
@@ -53,16 +53,16 @@ export function Navbar() {
           aria-label="Primary"
           className="flex h-20 items-center justify-between border-b border-tbc-cream/5"
         >
-          <Link href="/" className="flex items-center gap-2.5">
+          <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-2.5">
             <Image
               src="/logo.png"
               alt=""
               width={48}
               height={48}
               priority
-              className="h-11 w-11 shrink-0 sm:h-12 sm:w-12"
+              className="h-9 w-9 shrink-0 sm:h-11 sm:w-11 lg:h-12 lg:w-12"
             />
-            <span className="font-heading text-xl font-semibold tracking-wide sm:text-2xl">
+            <span className="whitespace-nowrap font-heading text-base font-semibold tracking-wide sm:text-xl lg:text-2xl">
               The <span className="text-gold-gradient">Blenders</span> Club
             </span>
           </Link>
@@ -84,28 +84,16 @@ export function Navbar() {
             ))}
           </ul>
 
-          <div className="flex items-center gap-3">
-            <Link
-              href="/menu"
-              className={cn(buttonClasses('gold', 'sm'), 'hidden sm:inline-flex')}
-            >
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            <Link href="/menu" className={cn(buttonClasses('gold', 'sm'), 'hidden lg:inline-flex')}>
               Order Directly
-            </Link>
-            {/* Compact icon-only equivalent below the sm breakpoint, so there's
-                always a visible order CTA, not just on larger screens. */}
-            <Link
-              href="/menu"
-              aria-label="Order Now"
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-gold-gradient text-black shadow-gold-glow transition-transform hover:scale-105 sm:hidden"
-            >
-              <ShoppingBag className="h-5 w-5" aria-hidden="true" />
             </Link>
 
             <button
               type="button"
               aria-label={`Open cart, ${cartCount} item${cartCount === 1 ? '' : 's'}`}
               onClick={openDrawer}
-              className="relative flex h-10 w-10 items-center justify-center rounded-full border border-tbc-charcoal-border text-tbc-cream transition-colors hover:bg-tbc-charcoal-light"
+              className="relative hidden h-10 w-10 items-center justify-center rounded-full border border-tbc-charcoal-border text-tbc-cream transition-colors hover:bg-tbc-charcoal-light lg:flex"
             >
               <ShoppingCart className="h-5 w-5" aria-hidden="true" />
               {cartCount > 0 && (
@@ -126,16 +114,27 @@ export function Navbar() {
               <User className="h-5 w-5" aria-hidden="true" />
             </Link>
 
-            <ThemeToggle className="hidden sm:flex" />
+            <ThemeToggle className="hidden lg:flex" />
 
+            {/* Below lg, everything else (order CTA, cart, nav links, theme)
+                collapses into this single dropdown — keeps the header to just
+                logo + user + one more button instead of a crowded icon row. */}
             <button
               type="button"
-              aria-label={isMobileOpen ? 'Close menu' : 'Open menu'}
+              aria-label={isMobileOpen ? 'Close menu' : 'More options'}
               aria-expanded={isMobileOpen}
               onClick={() => setIsMobileOpen((v) => !v)}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-tbc-charcoal-border text-tbc-cream lg:hidden"
+              className="relative flex h-10 w-10 items-center justify-center rounded-full border border-tbc-charcoal-border text-tbc-cream lg:hidden"
             >
-              {isMobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {isMobileOpen ? <X className="h-5 w-5" /> : <MoreHorizontal className="h-5 w-5" />}
+              {!isMobileOpen && cartCount > 0 && (
+                <span
+                  className="absolute -right-1 -top-1 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-tbc-emerald-500 px-1 text-[11px] font-bold text-white"
+                  aria-hidden="true"
+                >
+                  {cartCount}
+                </span>
+              )}
             </button>
           </div>
         </nav>
@@ -144,9 +143,30 @@ export function Navbar() {
       {isMobileOpen && (
         <div className="border-b border-tbc-cream/5 bg-tbc-black lg:hidden">
           <Container>
-            <Link href="/menu" className={cn(buttonClasses('gold', 'md'), 'mt-4 w-full')}>
-              Order Now
-            </Link>
+            <div className="flex gap-3 pt-4">
+              <Link href="/menu" className={cn(buttonClasses('gold', 'md'), 'flex-1')}>
+                Order Now
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileOpen(false);
+                  openDrawer();
+                }}
+                className="relative flex items-center gap-2 rounded-full border border-tbc-charcoal-border px-5 text-sm font-medium text-tbc-cream transition-colors hover:bg-tbc-charcoal-light"
+              >
+                <ShoppingCart className="h-4 w-4" aria-hidden="true" />
+                Cart
+                {cartCount > 0 && (
+                  <span
+                    className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-tbc-emerald-500 px-1 text-[11px] font-bold text-white"
+                    aria-hidden="true"
+                  >
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+            </div>
             <ul className="flex flex-col gap-1 py-4">
               {navLinks.map((link) => (
                 <li key={link.href}>
@@ -162,7 +182,7 @@ export function Navbar() {
                 </li>
               ))}
             </ul>
-            <div className="flex items-center justify-between border-t border-tbc-cream/5 py-4 sm:hidden">
+            <div className="flex items-center justify-between border-t border-tbc-cream/5 py-4">
               <span className="text-sm font-medium text-tbc-cream-muted">Appearance</span>
               <ThemeToggle />
             </div>

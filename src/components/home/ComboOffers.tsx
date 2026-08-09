@@ -12,6 +12,7 @@ import { getMenuItemById } from '@/data/menu';
 import { useCartStore } from '@/lib/store/cart-store';
 import { DEFAULT_CUSTOMIZATION } from '@/types/cart';
 import { formatCurrency } from '@/lib/utils';
+import { pricingConfig } from '@/lib/config';
 import type { MenuItem } from '@/types/menu';
 
 export function ComboOffers() {
@@ -88,7 +89,7 @@ export function ComboOffers() {
               <p className="mt-1.5 flex-1 text-sm text-tbc-cream-muted">{buildYourOwnCombo.description}</p>
               <div className="mt-4 flex items-center justify-between">
                 <span className="text-lg font-bold text-tbc-gold-400">
-                  {formatCurrency(buildYourOwnCombo.comboPrice)}
+                  {pricingConfig.combo.discountPercent}% OFF
                 </span>
                 <Button variant="gold" size="sm" onClick={() => setBuildingCombo(true)}>
                   Build Combo
