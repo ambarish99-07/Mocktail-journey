@@ -16,6 +16,7 @@
     "clsx": "2.1.1",
     "framer-motion": "11.3.19",
     "jose": "^6.2.6",
+    "leaflet": "^1.9.4",
     "lucide-react": "0.427.0",
     "mongodb": "^7.5.0",
     "next": "14.2.35",
@@ -24,12 +25,14 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-hook-form": "7.52.2",
+    "react-leaflet": "^4.2.1",
     "sonner": "^2.0.7",
     "tailwind-merge": "2.4.0",
     "zod": "3.23.8",
     "zustand": "4.5.4"
   },
   "devDependencies": {
+    "@types/leaflet": "^1.9.22",
     "@types/node": "20.14.15",
     "@types/react": "18.3.3",
     "@types/react-dom": "18.3.0",

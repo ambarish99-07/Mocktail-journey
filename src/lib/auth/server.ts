@@ -21,6 +21,12 @@ export function toSafeUser(doc: UserDoc): SafeUser {
     loyalty: doc.loyalty ?? { completedOrderCount: 0 },
     rewards: doc.rewards ?? { coldCoffeeCounter: 0, freeItemCounter: 0 },
     premium: doc.premium ?? { isMember: false, enrolledAt: null },
+    premiumCard: {
+      isActive: doc.premiumCard?.isActive ?? false,
+      purchasedAt: doc.premiumCard?.purchasedAt ?? null,
+      expiresAt: doc.premiumCard?.expiresAt ?? null,
+    },
+    defaultAddress: doc.defaultAddress ?? null,
   };
 }
 

@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/store/auth-store';
-import { isPremiumEligible } from '@/lib/rewards-eligibility';
+import { isPremiumEligible, isFirstOrderBogoEligible } from '@/lib/rewards-eligibility';
 import { pricingConfig } from '@/lib/config';
 
 export function RewardsStatusBanner() {
@@ -22,6 +22,14 @@ export function RewardsStatusBanner() {
           <strong className="text-tbc-gold-400">You&apos;re a Premium Member</strong> —{' '}
           {pricingConfig.premium.discountPercent}% off every order, plus free delivery within{' '}
           {pricingConfig.premium.freeDeliveryRadiusKm}km.
+        </div>
+      );
+    }
+    if (isFirstOrderBogoEligible(authUser.loyalty.completedOrderCount)) {
+      return (
+        <div className="mt-12 rounded-xl2 border border-tbc-gold-400/50 bg-tbc-gold-400/10 p-6 text-center text-sm">
+          <strong className="text-tbc-gold-400">Your first order is Buy 1 Get 1 Free</strong> — the cheapest
+          eligible drink is on us (excludes combos). Applied automatically at checkout.
         </div>
       );
     }
@@ -55,7 +63,8 @@ export function RewardsStatusBanner() {
       <Link href="/signup" className="text-tbc-gold-400 hover:underline">
         Create an account
       </Link>{' '}
-      to earn Premium Membership and repeat-order rewards that follow you anywhere.
+      to get Buy 1 Get 1 Free on your first order, plus Premium Membership and repeat-order rewards that
+      follow you anywhere.
     </div>
   );
 }

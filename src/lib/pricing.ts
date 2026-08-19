@@ -48,12 +48,22 @@ function freeItemRewardAmount(items: CartItem[]): number {
   return cheapest ? unitEffectivePrice(cheapest) : 0;
 }
 
+/** First-order "Buy 1 Get 1 Free": cheapest eligible unit is free, but only once there are 2+ eligible units — otherwise there's no "1" to buy alongside the free one. */
+function bogoRewardAmount(items: CartItem[]): number {
+  const eligibleUnits = items.filter((item) => !isCombo(item)).reduce((sum, item) => sum + item.quantity, 0);
+  if (eligibleUnits < 2) return 0;
+  const cheapest = cheapestItem(items);
+  return cheapest ? unitEffectivePrice(cheapest) : 0;
+}
+
 interface OrderTotalsOptions {
   /** Flat 25% instead of the quantity-tier discount — mutually exclusive, Premium always wins when true. */
   isPremiumMember?: boolean;
   coldCoffeeReward?: boolean;
   freeItemReward?: boolean;
-  /** Premium Member + within the free-delivery radius — decided by the caller (needs geocoding, not pure). */
+  /** Customer's first order, registered accounts only — cheapest eligible (non-combo) unit goes free. */
+  firstOrderBogo?: boolean;
+  /** Premium Member (or active Premium Card) + within the free-delivery radius — decided by the caller (needs geocoding, not pure). */
   freeDeliveryEligible?: boolean;
 }
 
@@ -71,6 +81,9 @@ interface OrderTotalsOptions {
  *
  * The milestone rewards (cold coffee / free item) are a third mechanic —
  * per-item markdowns, not subtotal percentages — and stack on top of both.
+ *
+ * bogoDiscount is a fourth, one-time mechanic: a customer's first order only,
+ * cheapest eligible (non-combo) unit free — also stacks on top of the above.
  */
 export function computeOrderTotals(items: CartItem[], options: OrderTotalsOptions = {}): OrderTotals {
   const subtotal = cartSubtotal(items);
@@ -95,11 +108,12 @@ export function computeOrderTotals(items: CartItem[], options: OrderTotalsOption
 
   const coldCoffeeDiscount = options.coldCoffeeReward ? coldCoffeeRewardAmount(items) : 0;
   const freeItemDiscount = options.freeItemReward ? freeItemRewardAmount(items) : 0;
+  const bogoDiscount = options.firstOrderBogo ? bogoRewardAmount(items) : 0;
 
   const deliveryFee =
     subtotal >= pricingConfig.freeDeliveryThreshold || options.freeDeliveryEligible ? 0 : pricingConfig.deliveryFee;
 
-  const taxableAmount = subtotal - orderDiscount - comboDiscount - coldCoffeeDiscount - freeItemDiscount;
+  const taxableAmount = subtotal - orderDiscount - comboDiscount - coldCoffeeDiscount - freeItemDiscount - bogoDiscount;
   const tax = Math.round((taxableAmount * pricingConfig.taxRatePercent) / 100);
 
   const total = taxableAmount + tax + deliveryFee;
@@ -111,6 +125,7 @@ export function computeOrderTotals(items: CartItem[], options: OrderTotalsOption
     comboDiscount,
     coldCoffeeDiscount,
     freeItemDiscount,
+    bogoDiscount,
     deliveryFee,
     tax,
     total,

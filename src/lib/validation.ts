@@ -33,6 +33,33 @@ export const checkoutSchema = z.object({
 
 export type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 
+/** Profile page — name/phone plus an optional saved default address. Address fields are only required together if any one of them is filled. */
+export const profileUpdateSchema = z
+  .object({
+    fullName: z.string().trim().min(2, 'Enter your full name'),
+    phone: z
+      .string()
+      .trim()
+      .regex(/^[+]?[0-9]{10,13}$/, 'Enter a valid phone number'),
+    address: z.string().trim().max(300).optional().or(z.literal('')),
+    city: z.string().trim().max(100).optional().or(z.literal('')),
+    pincode: z.string().trim().regex(/^[0-9]{6}$/, 'Enter a valid 6-digit pincode').optional().or(z.literal('')),
+    mapsLink: z.string().trim().url('Enter a valid Google Maps link').optional().or(z.literal('')),
+  })
+  .refine((data) => !data.address || data.address.length >= 5, {
+    message: 'Enter your delivery address',
+    path: ['address'],
+  })
+  .refine((data) => !data.address || data.city, {
+    message: 'Enter your city',
+    path: ['city'],
+  })
+  .refine((data) => !data.address || data.pincode, {
+    message: 'Enter your pincode',
+    path: ['pincode'],
+  });
+export type ProfileUpdateFormValues = z.infer<typeof profileUpdateSchema>;
+
 export const contactSchema = z.object({
   name: z.string().trim().min(2, 'Enter your name'),
   email: z.string().trim().email('Enter a valid email'),

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -15,7 +15,12 @@ import { useCartStore } from '@/lib/store/cart-store';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useOrderStore } from '@/lib/store/order-store';
 import { computeOrderTotals, ESTIMATED_DELIVERY_MINUTES } from '@/lib/pricing';
-import { isColdCoffeeRewardOrder, isFreeItemRewardOrder, isPremiumEligible } from '@/lib/rewards-eligibility';
+import {
+  isColdCoffeeRewardOrder,
+  isFreeItemRewardOrder,
+  isPremiumEligible,
+  isFirstOrderBogoEligible,
+} from '@/lib/rewards-eligibility';
 import { pricingConfig } from '@/lib/config';
 import { checkoutSchema, type CheckoutFormValues } from '@/lib/validation';
 import { shareCurrentLocation, buildWhatsAppMessage, buildWhatsAppLink } from '@/lib/whatsapp';
@@ -44,10 +49,28 @@ export function CheckoutClient() {
     setValue,
     trigger,
     getValues,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
   });
+
+  // Prefill from the customer's saved profile once it loads — once only, so
+  // it never overwrites something they've already started typing. Guests and
+  // first-time customers with no saved address just see an empty form.
+  const hasPrefilled = useRef(false);
+  useEffect(() => {
+    if (hasPrefilled.current || !authUser) return;
+    hasPrefilled.current = true;
+    reset({
+      fullName: authUser.fullName,
+      phone: authUser.phone,
+      address: authUser.defaultAddress?.address ?? '',
+      city: authUser.defaultAddress?.city ?? '',
+      pincode: authUser.defaultAddress?.pincode ?? '',
+      mapsLink: authUser.defaultAddress?.mapsLink ?? '',
+    });
+  }, [authUser, reset]);
 
   // The quantity discount is purely based on what's in THIS cart, so guests get
   // it too. Premium/milestone rewards are registered-accounts-only. Note: this
@@ -57,7 +80,8 @@ export function CheckoutClient() {
   const isPremiumMember = authUser?.premium.isMember ?? false;
   const coldCoffeeReward = authUser ? isColdCoffeeRewardOrder(authUser.rewards.coldCoffeeCounter) : false;
   const freeItemReward = authUser ? isFreeItemRewardOrder(authUser.rewards.freeItemCounter) : false;
-  const totals = computeOrderTotals(items, { isPremiumMember, coldCoffeeReward, freeItemReward });
+  const firstOrderBogo = authUser ? isFirstOrderBogoEligible(authUser.loyalty.completedOrderCount) : false;
+  const totals = computeOrderTotals(items, { isPremiumMember, coldCoffeeReward, freeItemReward, firstOrderBogo });
 
   const handleShareLocation = async () => {
     setLocationStatus('loading');
@@ -366,6 +390,21 @@ export function CheckoutClient() {
           </ul>
 
           <CartSummary totals={totals} />
+
+          {!authUser && (
+            <p className="mt-3 text-xs text-tbc-gold-400">
+              <Link href="/signup" className="underline">
+                Create an account
+              </Link>{' '}
+              to get Buy 1 Get 1 Free on your first order (excludes combos).
+            </p>
+          )}
+
+          {authUser && firstOrderBogo && totals.bogoDiscount === 0 && (
+            <p className="mt-3 text-xs text-tbc-gold-400">
+              Add one more eligible drink to unlock Buy 1 Get 1 Free on your first order.
+            </p>
+          )}
 
           {authUser && !isPremiumMember && (
             <div className="mt-3 space-y-1">

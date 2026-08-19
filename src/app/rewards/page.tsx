@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Coffee, Gift, Crown, GlassWater } from 'lucide-react';
+import { Coffee, Gift, Crown, GlassWater, Sparkles, Truck } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { FadeIn } from '@/components/ui/FadeIn';
@@ -65,6 +65,30 @@ export default function RewardsPage() {
 
           <div className="mt-16">
             <SectionHeading
+              eyebrow="New Customers"
+              title="Your First Order: Buy 1 Get 1 Free"
+              description="Sign up, order, and the cheapest eligible drink in your cart is on us — automatically, no code needed. Doesn't apply to combos."
+              align="left"
+              className="mx-0"
+            />
+            <FadeIn>
+              <div className="mt-8 flex flex-col items-start gap-4 rounded-xl2 border border-tbc-gold-400/40 bg-tbc-gold-400/5 p-8 sm:flex-row sm:items-center">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-tbc-gold-400/10 text-tbc-gold-400">
+                  <Sparkles className="h-7 w-7" aria-hidden="true" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-tbc-gold-400">Buy 1 Get 1 Free</p>
+                  <p className="mt-1 text-sm text-tbc-cream-muted">
+                    Add 2 or more eligible drinks to your first order and the cheapest one is free. One-time,
+                    registered accounts only.
+                  </p>
+                </div>
+              </div>
+            </FadeIn>
+          </div>
+
+          <div className="mt-16">
+            <SectionHeading
               eyebrow="For Registered Customers"
               title="Repeat-Order Rewards"
               description="Two independent, repeating rewards that keep coming back the more you order."
@@ -106,6 +130,32 @@ export default function RewardsPage() {
                   <p className="mt-1 text-sm text-tbc-cream-muted">
                     Plus free delivery within {pricingConfig.premium.freeDeliveryRadiusKm}km of our kitchen. Unlocks after{' '}
                     {pricingConfig.premium.unlockAfterOrders} completed orders — join anytime after that from your account.
+                  </p>
+                </div>
+              </div>
+            </FadeIn>
+          </div>
+
+          <div className="mt-16">
+            <SectionHeading
+              eyebrow="Don't Want to Wait?"
+              title="Premium Membership Card"
+              description="A faster, paid path to free delivery — no order-count requirement."
+              align="left"
+              className="mx-0"
+            />
+            <FadeIn>
+              <div className="mt-8 flex flex-col items-start gap-4 rounded-xl2 border border-tbc-gold-400/40 bg-tbc-gold-400/5 p-8 sm:flex-row sm:items-center">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-tbc-gold-400/10 text-tbc-gold-400">
+                  <Truck className="h-7 w-7" aria-hidden="true" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-tbc-gold-400">
+                    ₹{pricingConfig.premiumCard.priceRupees} for {pricingConfig.premiumCard.validDays} days
+                  </p>
+                  <p className="mt-1 text-sm text-tbc-cream-muted">
+                    Free delivery eligibility within {pricingConfig.premium.freeDeliveryRadiusKm}km of our kitchen —
+                    independent of the order-count Premium tier above. Buy anytime from your account.
                   </p>
                 </div>
               </div>

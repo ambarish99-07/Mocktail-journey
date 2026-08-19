@@ -12,8 +12,11 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClasses: Record<ButtonVariant, string> = {
   gold: 'bg-gold-gradient text-black font-semibold shadow-gold-glow hover:brightness-110 active:brightness-95',
+  // Pinned white, not the theme token — this sits on a static emerald
+  // background regardless of site theme, so the text shouldn't flip to dark
+  // charcoal in light mode (would fail contrast against the green).
   emerald:
-    'bg-tbc-emerald-500 text-tbc-cream font-semibold shadow-emerald-glow hover:bg-tbc-emerald-400 active:bg-tbc-emerald-600',
+    'bg-tbc-emerald-500 text-white font-semibold shadow-emerald-glow hover:bg-tbc-emerald-400 active:bg-tbc-emerald-600',
   whatsapp: 'bg-[#25D366] text-black font-semibold hover:brightness-105 active:brightness-95',
   // Official brand colors (Zomato red / Swiggy orange). White text on Swiggy's
   // orange fails contrast (~2.5:1), so it gets dark text instead — same

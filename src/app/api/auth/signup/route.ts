@@ -39,6 +39,8 @@ export async function POST(request: Request) {
     loyalty: { completedOrderCount: 0 },
     rewards: { coldCoffeeCounter: 0, freeItemCounter: 0 },
     premium: { isMember: false, enrolledAt: null },
+    premiumCard: { isActive: false, purchasedAt: null, expiresAt: null },
+    defaultAddress: null,
     createdAt: now,
     updatedAt: now,
   };

@@ -70,6 +70,15 @@ export const pricingConfig = {
     /** Straight-line delivery radius (km) within which Premium Members get free delivery. */
     freeDeliveryRadiusKm: 4,
   },
+  /**
+   * Premium Membership Card — a paid, time-limited alternative to the
+   * order-count-unlocked Premium tier above. Grants free-delivery
+   * eligibility only (same radius check, not the 25% order discount).
+   */
+  premiumCard: {
+    priceRupees: 21,
+    validDays: 60,
+  },
   /** Repeating milestone rewards — see src/lib/rewards-eligibility.ts. */
   milestoneRewards: {
     coldCoffee: { every: 6, discountPercent: 50 },
@@ -80,17 +89,25 @@ export const pricingConfig = {
   freeDeliveryThreshold: 499,
 } as const;
 
-export const navLinks = [
+/** Always visible in the desktop nav bar. */
+export const primaryNavLinks = [
   { label: 'Home', href: '/' },
   { label: 'Menu', href: '/menu' },
   { label: 'About', href: '/about' },
+  { label: 'Contact', href: '/contact' },
+] as const;
+
+/** Tucked into the desktop nav's "More" dropdown — still shown inline on mobile. */
+export const moreNavLinks = [
   { label: 'Catering', href: '/catering' },
   { label: 'Franchise', href: '/franchise' },
   { label: 'Rewards', href: '/rewards' },
   { label: 'Gallery', href: '/gallery' },
   { label: 'FAQs', href: '/faqs' },
-  { label: 'Contact', href: '/contact' },
 ] as const;
+
+/** Full set, in display order — used by the mobile nav dropdown, which doesn't need a nested overflow menu. */
+export const navLinks = [...primaryNavLinks, ...moreNavLinks] as const;
 
 export const footerLinks = {
   company: [

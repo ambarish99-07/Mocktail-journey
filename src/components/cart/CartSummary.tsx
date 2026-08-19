@@ -9,10 +9,19 @@ interface CartSummaryProps {
 
 export function CartSummary({ totals, className, showSavedBanner = true }: CartSummaryProps) {
   const totalDiscount =
-    totals.orderDiscount + totals.comboDiscount + totals.coldCoffeeDiscount + totals.freeItemDiscount;
+    totals.orderDiscount +
+    totals.comboDiscount +
+    totals.coldCoffeeDiscount +
+    totals.freeItemDiscount +
+    totals.bogoDiscount;
 
   return (
     <div className={cn('space-y-3', className)}>
+      {totals.bogoDiscount > 0 && (
+        <div className="rounded-xl2 border border-tbc-gold-400/50 bg-tbc-gold-400/10 px-4 py-3 text-sm text-tbc-gold-400">
+          🎉 Buy 1 Get 1 Free applied — your first order.
+        </div>
+      )}
       {totals.freeItemDiscount > 0 && (
         <div className="rounded-xl2 border border-tbc-gold-400/50 bg-tbc-gold-400/10 px-4 py-3 text-sm text-tbc-gold-400">
           🎉 Reward unlocked — one drink is free this order.
@@ -56,6 +65,13 @@ export function CartSummary({ totals, className, showSavedBanner = true }: CartS
         <Row
           label="Free Drink Reward"
           value={`- ${formatCurrency(totals.freeItemDiscount)}`}
+          valueClassName="text-tbc-gold-400"
+        />
+      )}
+      {totals.bogoDiscount > 0 && (
+        <Row
+          label="Buy 1 Get 1 Free"
+          value={`- ${formatCurrency(totals.bogoDiscount)}`}
           valueClassName="text-tbc-gold-400"
         />
       )}

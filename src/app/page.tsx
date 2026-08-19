@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Hero } from '@/components/home/Hero';
+import { PromoBanners } from '@/components/home/PromoBanners';
 import { FeaturedDrinks } from '@/components/home/FeaturedDrinks';
 import { WhyChooseUs } from '@/components/home/WhyChooseUs';
 import { SignatureMenuPreview } from '@/components/home/SignatureMenuPreview';
@@ -20,6 +21,7 @@ export default function HomePage() {
   return (
     <>
       <Hero />
+      <PromoBanners />
       <FeaturedDrinks />
       <WhyChooseUs />
       <SignatureMenuPreview />

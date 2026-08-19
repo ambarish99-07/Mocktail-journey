@@ -8,7 +8,8 @@ import { MoreHorizontal, ShoppingCart, User, X } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
 import { buttonClasses } from '@/components/ui/Button';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
-import { navLinks } from '@/lib/config';
+import { NavMoreDropdown } from '@/components/layout/NavMoreDropdown';
+import { navLinks, primaryNavLinks, moreNavLinks } from '@/lib/config';
 import { useCartCount, useCartStore } from '@/lib/store/cart-store';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { cn } from '@/lib/utils';
@@ -67,75 +68,84 @@ export function Navbar() {
             </span>
           </Link>
 
-          <ul className="hidden items-center gap-7 lg:flex xl:gap-9">
-            {navLinks.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className={cn(
-                    'text-sm font-medium tracking-wide text-tbc-cream-muted transition-colors hover:text-tbc-gold-400',
-                    pathname === link.href && 'text-tbc-gold-400'
-                  )}
-                  aria-current={pathname === link.href ? 'page' : undefined}
-                >
-                  {link.label}
-                </Link>
+          {/* Nav links live in the same right-hand cluster as the action
+              buttons (instead of being spread across the middle by
+              justify-between on their own) so they sit close to Order
+              Directly rather than floating in a wide gap. */}
+          <div className="flex items-center gap-8 xl:gap-10">
+            <ul className="hidden items-center gap-7 lg:flex xl:gap-9">
+              {primaryNavLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className={cn(
+                      'text-sm font-medium tracking-wide text-tbc-cream-muted transition-colors hover:text-tbc-gold-400',
+                      pathname === link.href && 'text-tbc-gold-400'
+                    )}
+                    aria-current={pathname === link.href ? 'page' : undefined}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+              <li>
+                <NavMoreDropdown label="More" links={moreNavLinks} />
               </li>
-            ))}
-          </ul>
+            </ul>
 
-          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-            <Link href="/menu" className={cn(buttonClasses('gold', 'sm'), 'hidden lg:inline-flex')}>
-              Order Directly
-            </Link>
+            <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+              <Link href="/menu" className={cn(buttonClasses('gold', 'sm'), 'hidden lg:inline-flex')}>
+                Order Directly
+              </Link>
 
-            <button
-              type="button"
-              aria-label={`Open cart, ${cartCount} item${cartCount === 1 ? '' : 's'}`}
-              onClick={openDrawer}
-              className="relative hidden h-10 w-10 items-center justify-center rounded-full border border-tbc-charcoal-border text-tbc-cream transition-colors hover:bg-tbc-charcoal-light lg:flex"
-            >
-              <ShoppingCart className="h-5 w-5" aria-hidden="true" />
-              {cartCount > 0 && (
-                <span
-                  className="absolute -right-1 -top-1 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-tbc-emerald-500 px-1 text-[11px] font-bold text-white"
-                  aria-hidden="true"
-                >
-                  {cartCount}
-                </span>
-              )}
-            </button>
+              <button
+                type="button"
+                aria-label={`Open cart, ${cartCount} item${cartCount === 1 ? '' : 's'}`}
+                onClick={openDrawer}
+                className="relative hidden h-10 w-10 items-center justify-center rounded-full border border-tbc-charcoal-border text-tbc-cream transition-colors hover:bg-tbc-charcoal-light lg:flex"
+              >
+                <ShoppingCart className="h-5 w-5" aria-hidden="true" />
+                {cartCount > 0 && (
+                  <span
+                    className="absolute -right-1 -top-1 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-tbc-emerald-500 px-1 text-[11px] font-bold text-white"
+                    aria-hidden="true"
+                  >
+                    {cartCount}
+                  </span>
+                )}
+              </button>
 
-            <Link
-              href={authUser ? '/account' : '/login'}
-              aria-label={authUser ? `Account, signed in as ${authUser.fullName}` : 'Sign in'}
-              className="relative flex h-10 w-10 items-center justify-center rounded-full border border-tbc-charcoal-border text-tbc-cream transition-colors hover:bg-tbc-charcoal-light"
-            >
-              <User className="h-5 w-5" aria-hidden="true" />
-            </Link>
+              <ThemeToggle className="hidden lg:flex" />
 
-            <ThemeToggle className="hidden lg:flex" />
+              <Link
+                href={authUser ? '/account' : '/login'}
+                aria-label={authUser ? `Account, signed in as ${authUser.fullName}` : 'Sign in'}
+                className="relative flex h-10 w-10 items-center justify-center rounded-full border border-tbc-charcoal-border text-tbc-cream transition-colors hover:bg-tbc-charcoal-light"
+              >
+                <User className="h-5 w-5" aria-hidden="true" />
+              </Link>
 
-            {/* Below lg, everything else (order CTA, cart, nav links, theme)
-                collapses into this single dropdown — keeps the header to just
-                logo + user + one more button instead of a crowded icon row. */}
-            <button
-              type="button"
-              aria-label={isMobileOpen ? 'Close menu' : 'More options'}
-              aria-expanded={isMobileOpen}
-              onClick={() => setIsMobileOpen((v) => !v)}
-              className="relative flex h-10 w-10 items-center justify-center rounded-full border border-tbc-charcoal-border text-tbc-cream lg:hidden"
-            >
-              {isMobileOpen ? <X className="h-5 w-5" /> : <MoreHorizontal className="h-5 w-5" />}
-              {!isMobileOpen && cartCount > 0 && (
-                <span
-                  className="absolute -right-1 -top-1 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-tbc-emerald-500 px-1 text-[11px] font-bold text-white"
-                  aria-hidden="true"
-                >
-                  {cartCount}
-                </span>
-              )}
-            </button>
+              {/* Below lg, everything else (order CTA, cart, nav links, theme)
+                  collapses into this single dropdown — keeps the header to just
+                  logo + user + one more button instead of a crowded icon row. */}
+              <button
+                type="button"
+                aria-label={isMobileOpen ? 'Close menu' : 'More options'}
+                aria-expanded={isMobileOpen}
+                onClick={() => setIsMobileOpen((v) => !v)}
+                className="relative flex h-10 w-10 items-center justify-center rounded-full border border-tbc-charcoal-border text-tbc-cream lg:hidden"
+              >
+                {isMobileOpen ? <X className="h-5 w-5" /> : <MoreHorizontal className="h-5 w-5" />}
+                {!isMobileOpen && cartCount > 0 && (
+                  <span
+                    className="absolute -right-1 -top-1 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-tbc-emerald-500 px-1 text-[11px] font-bold text-white"
+                    aria-hidden="true"
+                  >
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
         </nav>
       </Container>

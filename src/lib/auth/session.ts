@@ -1,7 +1,11 @@
 import { SignJWT, jwtVerify } from 'jose';
 
 const COOKIE_NAME = 'tbc_session';
-const SESSION_DURATION_SECONDS = 30 * 24 * 60 * 60; // 30 days
+// Long-lived + renewed on every /api/auth/me check (see that route) rather
+// than a fixed expiry from login time — an active customer's session keeps
+// rolling forward indefinitely; only someone who genuinely stops visiting
+// for this long gets asked to log in again.
+const SESSION_DURATION_SECONDS = 90 * 24 * 60 * 60; // 90 days
 
 export interface SessionPayload {
   userId: string;

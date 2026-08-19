@@ -1,11 +1,33 @@
 import type { ObjectId } from 'mongodb';
 import type { CartItem } from './cart';
-import type { DeliveryDetails, OrderStatus, OrderTotals, PaymentMethod, PaymentStatus } from './order';
+import type {
+  DeliveryDetails,
+  OrderStatus,
+  OrderStatusEvent,
+  OrderTotals,
+  PaymentMethod,
+  PaymentStatus,
+  RiderLocation,
+} from './order';
 
-export interface OrderStatusEvent {
-  status: OrderStatus;
-  at: string;
-  note?: string;
+// Re-exported so existing `import type { OrderStatusEvent } from '@/types/db'` call sites keep working — the canonical definition now lives in order.ts alongside PlacedOrder, which needs it too.
+export type { OrderStatusEvent };
+
+/** Rider tracking state on an order — trackingToken is the unguessable credential the rider-facing page uses, never sent to the customer (see SafeRiderInfo in src/types/order.ts). */
+export interface RiderInfo {
+  name: string;
+  phone: string;
+  trackingToken: string;
+  location: RiderLocation | null;
+  sharingActive: boolean;
+}
+
+/** A customer's saved default delivery address — set from their profile, or auto-saved from their most recent checkout. */
+export interface SavedAddress {
+  address: string;
+  city: string;
+  pincode: string;
+  mapsLink: string | null;
 }
 
 /** MongoDB `orders` collection document. Server-only shape — see PlacedOrder (src/types/order.ts) for the trimmed client projection. */
@@ -24,8 +46,14 @@ export interface OrderDoc {
   coldCoffeeRewardApplied: boolean;
   /** Whether this order redeemed the every-10th-order free-item reward. */
   freeItemRewardApplied: boolean;
+  /** Whether this order redeemed the first-order Buy 1 Get 1 Free offer. */
+  bogoRewardApplied: boolean;
   /** Straight-line distance from the kitchen in km, if it could be determined — null if delivery coordinates couldn't be resolved. Informational + drives the Premium free-delivery radius check. */
   deliveryDistanceKm: number | null;
+  /** Resolved once, when a rider is assigned (or earlier if the Premium radius check already resolved it) — lets the delivery map plot the customer's pin without re-geocoding on every poll. */
+  deliveryCoordinates: { lat: number; lng: number } | null;
+  /** Null until an admin assigns a rider (name + phone) for this delivery. */
+  rider: RiderInfo | null;
   estimatedMinutes: number;
   status: OrderStatus;
   statusHistory: OrderStatusEvent[];
@@ -68,6 +96,20 @@ export interface UserDoc {
     isMember: boolean;
     enrolledAt: string | null;
   };
+  /**
+   * Paid, time-limited membership (₹21 / 60 days) — grants free-delivery
+   * eligibility only (not the 25% order discount that full Premium gets).
+   * Independent of `premium` above: a customer can hold either, both, or
+   * neither at the same time.
+   */
+  premiumCard: {
+    isActive: boolean;
+    purchasedAt: string | null;
+    expiresAt: string | null;
+    razorpayOrderId?: string;
+  };
+  /** Remembered delivery details — set explicitly from the profile page, or silently kept in sync from the customer's most recent checkout. Null until either happens. */
+  defaultAddress: SavedAddress | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -120,4 +162,10 @@ export interface SafeUser {
     isMember: boolean;
     enrolledAt: string | null;
   };
+  premiumCard: {
+    isActive: boolean;
+    purchasedAt: string | null;
+    expiresAt: string | null;
+  };
+  defaultAddress: SavedAddress | null;
 }

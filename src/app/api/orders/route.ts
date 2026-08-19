@@ -3,7 +3,12 @@ import { ObjectId } from 'mongodb';
 import crypto from 'node:crypto';
 import { checkoutSchema } from '@/lib/validation';
 import { computeOrderTotals, ESTIMATED_DELIVERY_MINUTES } from '@/lib/pricing';
-import { isColdCoffeeRewardOrder, isFreeItemRewardOrder } from '@/lib/rewards-eligibility';
+import {
+  isColdCoffeeRewardOrder,
+  isFreeItemRewardOrder,
+  isFirstOrderBogoEligible,
+  isPremiumCardActive,
+} from '@/lib/rewards-eligibility';
 import { recordCompletedOrderForUser } from '@/lib/user-rewards';
 import { resolveDeliveryCoordinates, haversineDistanceKm } from '@/lib/geo';
 import { generateOrderId } from '@/lib/utils';
@@ -72,24 +77,56 @@ export async function POST(request: Request) {
   const session = await getSession();
   let userId: ObjectId | null = null;
   let user: UserDoc | null = null;
+  let usersCollection: Awaited<ReturnType<typeof getUsersCollection>> | null = null;
   if (session) {
-    const users = await getUsersCollection();
-    user = await users.findOne({ _id: new ObjectId(session.userId) });
+    usersCollection = await getUsersCollection();
+    user = await usersCollection.findOne({ _id: new ObjectId(session.userId) });
     if (user) userId = user._id;
   }
 
+  // Silently keep the saved profile in sync with whatever delivery details
+  // were just used — "remembers" the customer for next time without asking
+  // them to separately visit their profile first. Never blocks the order.
+  if (user && usersCollection) {
+    try {
+      await usersCollection.updateOne(
+        { _id: user._id },
+        {
+          $set: {
+            fullName: delivery.fullName,
+            phone: delivery.phone,
+            defaultAddress: {
+              address: delivery.address,
+              city: delivery.city,
+              pincode: delivery.pincode,
+              mapsLink: delivery.mapsLink || null,
+            },
+            updatedAt: new Date().toISOString(),
+          },
+        }
+      );
+    } catch (err) {
+      console.error('[orders] failed to sync profile from checkout', err);
+    }
+  }
+
   const isPremiumMember = user?.premium.isMember ?? false;
+  const hasActivePremiumCard = isPremiumCardActive(user?.premiumCard);
   const coldCoffeeReward = user ? isColdCoffeeRewardOrder(user.rewards.coldCoffeeCounter) : false;
   const freeItemReward = user ? isFreeItemRewardOrder(user.rewards.freeItemCounter) : false;
+  const firstOrderBogo = user ? isFirstOrderBogoEligible(user.loyalty.completedOrderCount) : false;
 
-  // Distance is only worth resolving for Premium Members — geocoding a typed
-  // address costs a network round-trip, skip it entirely otherwise.
+  // Distance is only worth resolving for Premium Members / active Premium Card
+  // holders — geocoding a typed address costs a network round-trip, skip it
+  // entirely otherwise.
   let deliveryDistanceKm: number | null = null;
+  let deliveryCoordinates: { lat: number; lng: number } | null = null;
   let freeDeliveryEligible = false;
-  if (isPremiumMember) {
+  if (isPremiumMember || hasActivePremiumCard) {
     const fullAddress = [delivery.address, delivery.city, delivery.pincode].filter(Boolean).join(', ');
     const coords = await resolveDeliveryCoordinates(delivery.mapsLink, fullAddress);
     if (coords) {
+      deliveryCoordinates = coords;
       deliveryDistanceKm = haversineDistanceKm({ lat: storeConfig.latitude, lng: storeConfig.longitude }, coords);
       freeDeliveryEligible = deliveryDistanceKm <= pricingConfig.premium.freeDeliveryRadiusKm;
     }
@@ -99,6 +136,7 @@ export async function POST(request: Request) {
     isPremiumMember,
     coldCoffeeReward,
     freeItemReward,
+    firstOrderBogo,
     freeDeliveryEligible,
   });
   const now = new Date().toISOString();
@@ -121,7 +159,10 @@ export async function POST(request: Request) {
     isPremiumOrder: isPremiumMember,
     coldCoffeeRewardApplied: coldCoffeeReward,
     freeItemRewardApplied: freeItemReward,
+    bogoRewardApplied: totals.bogoDiscount > 0,
     deliveryDistanceKm,
+    deliveryCoordinates,
+    rider: null,
     estimatedMinutes: ESTIMATED_DELIVERY_MINUTES,
     status: 'received',
     statusHistory: [{ status: 'received', at: now }],

@@ -12,6 +12,7 @@ function ensureIndexes(db: Awaited<ReturnType<typeof getDb>>) {
       db.collection<OrderDoc>('orders').createIndex({ userId: 1 }),
       db.collection<OrderDoc>('orders').createIndex({ status: 1 }),
       db.collection<OrderDoc>('orders').createIndex({ accessToken: 1 }, { sparse: true }),
+      db.collection<OrderDoc>('orders').createIndex({ 'rider.trackingToken': 1 }, { sparse: true }),
       db.collection<LeadDoc>('leads').createIndex({ type: 1 }),
       db.collection<LeadDoc>('leads').createIndex({ status: 1 }),
       db.collection<LeadDoc>('leads').createIndex({ createdAt: -1 }),

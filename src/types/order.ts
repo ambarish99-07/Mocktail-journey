@@ -14,6 +14,26 @@ export interface DeliveryDetails {
   specialInstructions?: string;
 }
 
+export interface OrderStatusEvent {
+  status: OrderStatus;
+  at: string;
+  note?: string;
+}
+
+export interface RiderLocation {
+  lat: number;
+  lng: number;
+  updatedAt: string;
+}
+
+/** Customer-facing rider projection — no trackingToken, that's rider-only (see RiderInfo in src/types/db.ts). */
+export interface SafeRiderInfo {
+  name: string;
+  phone: string;
+  location: RiderLocation | null;
+  sharingActive: boolean;
+}
+
 export interface OrderTotals {
   subtotal: number;
   /** The quantity-tier discount (non-premium) OR the flat 25% Premium Member discount — never both. Applies only to non-combo lines; combos have their own flat comboDiscount instead. */
@@ -26,6 +46,8 @@ export interface OrderTotals {
   coldCoffeeDiscount: number;
   /** Every-10th-order reward: one eligible drink fully free. */
   freeItemDiscount: number;
+  /** First-order-only "Buy 1 Get 1 Free": cheapest eligible (non-combo) unit is free, requires 2+ eligible units in cart. */
+  bogoDiscount: number;
   deliveryFee: number;
   tax: number;
   total: number;
@@ -45,6 +67,9 @@ export interface PlacedOrder {
   totals: OrderTotals;
   estimatedMinutes: number;
   status: OrderStatus;
+  statusHistory: OrderStatusEvent[];
+  rider: SafeRiderInfo | null;
+  deliveryCoordinates: { lat: number; lng: number } | null;
   payment: {
     method: PaymentMethod;
     status: PaymentStatus;
