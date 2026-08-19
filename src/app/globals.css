@@ -109,27 +109,31 @@
   }
 
   /*
-   * Pastel "glossy glass" card backgrounds — a soft tinted gradient plus a
-   * white radial sheen (top-left) to read as a highlight/reflection, and a
-   * matching outer glow. Static rgba values (not theme tokens) so the glass
-   * effect looks intentional in both light and dark mode rather than
-   * flipping with the page background.
+   * "Glossy glass" card backgrounds — a tinted gradient plus a hue-matched
+   * (never white) highlight for a bit of glass-like depth, and a matching
+   * outer glow. No white anywhere: a white sheen looked fine as a design
+   * idea but washed out the text sitting on top of it, especially in dark
+   * mode. The gradient now stays at or darker than the tone on the card's
+   * right side throughout, rather than brightening toward a pale corner.
+   * Static rgba values (not theme tokens) so the glass effect looks
+   * intentional in both light and dark mode rather than flipping with the
+   * page background.
    */
   .glossy-card-gold {
     background:
-      radial-gradient(120% 140% at 18% 12%, rgba(255, 255, 255, 0.4), transparent 45%),
-      linear-gradient(135deg, rgba(243, 228, 180, 0.4) 0%, rgba(212, 175, 55, 0.2) 50%, rgba(161, 126, 27, 0.14) 100%);
+      radial-gradient(120% 140% at 18% 12%, rgba(212, 175, 55, 0.22), transparent 45%),
+      linear-gradient(135deg, rgba(212, 175, 55, 0.18) 0%, rgba(161, 126, 27, 0.22) 100%);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.3),
+      inset 0 1px 0 rgba(212, 175, 55, 0.2),
       0 20px 60px -25px rgba(212, 175, 55, 0.5);
   }
 
   .glossy-card-emerald {
     background:
-      radial-gradient(120% 140% at 18% 12%, rgba(255, 255, 255, 0.4), transparent 45%),
-      linear-gradient(135deg, rgba(194, 231, 214, 0.4) 0%, rgba(14, 143, 93, 0.2) 50%, rgba(10, 61, 42, 0.14) 100%);
+      radial-gradient(120% 140% at 18% 12%, rgba(14, 143, 93, 0.22), transparent 45%),
+      linear-gradient(135deg, rgba(14, 143, 93, 0.18) 0%, rgba(10, 61, 42, 0.22) 100%);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.3),
+      inset 0 1px 0 rgba(14, 143, 93, 0.2),
       0 20px 60px -25px rgba(14, 143, 93, 0.5);
   }
 }
