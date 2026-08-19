@@ -15,6 +15,20 @@ export function getRazorpayClient(): Razorpay {
   return instance;
 }
 
+/** Issues a real refund against a captured payment — used for automatic pre-delivery cancellations and approved post-delivery Razorpay refund claims. Returns the refund ID, or null if the call fails (caller decides how to handle — never silently claim success). */
+export async function refundPayment(razorpayPaymentId: string, amountRupees: number): Promise<string | null> {
+  if (amountRupees <= 0) return null;
+  try {
+    const refund = await getRazorpayClient().payments.refund(razorpayPaymentId, {
+      amount: Math.round(amountRupees * 100), // paise
+    });
+    return refund.id;
+  } catch (err) {
+    console.error('[razorpay] refund failed', err);
+    return null;
+  }
+}
+
 /**
  * The client's payment-success callback is never trusted alone — this signature
  * check (HMAC-SHA256 over "orderId|paymentId" using the account's key secret) is

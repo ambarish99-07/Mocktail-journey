@@ -84,6 +84,18 @@ export const pricingConfig = {
     coldCoffee: { every: 6, discountPercent: 50 },
     freeItem: { every: 10 },
   },
+  /** Cancellation / refund-claim rules — see src/app/api/orders/[id]/cancel and .../refund-claim. */
+  cancellation: {
+    /** Before "out for delivery": full refund, automatic. */
+    fullRefundBeforeStatus: 'out-for-delivery',
+    /** From "out for delivery" until actual delivery: half refund, automatic. */
+    halfRefundPercent: 50,
+  },
+  /** Issued when an admin approves a post-delivery refund claim on a COD order — cash was already collected at the door, so this substitutes for a cash refund. */
+  compensationCoupon: {
+    amountRupees: 100,
+    validDays: 60,
+  },
   taxRatePercent: 5,
   deliveryFee: 39,
   freeDeliveryThreshold: 499,

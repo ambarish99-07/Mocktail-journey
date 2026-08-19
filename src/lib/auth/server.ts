@@ -27,6 +27,7 @@ export function toSafeUser(doc: UserDoc): SafeUser {
       expiresAt: doc.premiumCard?.expiresAt ?? null,
     },
     defaultAddress: doc.defaultAddress ?? null,
+    coupons: doc.coupons ?? [],
   };
 }
 

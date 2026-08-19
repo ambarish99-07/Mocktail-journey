@@ -5,6 +5,7 @@ import { notifyAdminNewOrder } from '@/lib/whatsapp-server';
 import { toPlacedOrder } from '@/lib/order-mapping';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import { recordCompletedOrderForUser } from '@/lib/user-rewards';
+import { markCouponUsed } from '@/lib/coupons-server';
 import type { OrderDoc } from '@/types/db';
 
 export async function POST(request: Request, { params }: { params: { id: string } }) {
@@ -77,6 +78,9 @@ export async function POST(request: Request, { params }: { params: { id: string 
       coldCoffeeRewardApplied: order.coldCoffeeRewardApplied,
       freeItemRewardApplied: order.freeItemRewardApplied,
     });
+    if (order.couponApplied) {
+      await markCouponUsed(order.userId, order.couponApplied, order.orderNumber);
+    }
   }
 
   return NextResponse.json({ order: toPlacedOrder(paidOrder) });

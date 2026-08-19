@@ -2,11 +2,13 @@ import type { ObjectId } from 'mongodb';
 import type { CartItem } from './cart';
 import type {
   DeliveryDetails,
+  OrderCancellation,
   OrderStatus,
   OrderStatusEvent,
   OrderTotals,
   PaymentMethod,
   PaymentStatus,
+  RefundClaim,
   RiderLocation,
 } from './order';
 
@@ -28,6 +30,17 @@ export interface SavedAddress {
   city: string;
   pincode: string;
   mapsLink: string | null;
+}
+
+/** Compensation credit — issued when an admin approves a post-delivery refund claim on a COD order (cash already collected, so a coupon substitutes for a cash refund). Flat rupee amount, auto-applied at the customer's next checkout, one active coupon redeemed at a time. */
+export interface Coupon {
+  code: string;
+  amountRupees: number;
+  reason: string;
+  issuedAt: string;
+  expiresAt: string | null;
+  usedAt: string | null;
+  usedOnOrderNumber?: string;
 }
 
 /** MongoDB `orders` collection document. Server-only shape — see PlacedOrder (src/types/order.ts) for the trimmed client projection. */
@@ -54,6 +67,12 @@ export interface OrderDoc {
   deliveryCoordinates: { lat: number; lng: number } | null;
   /** Null until an admin assigns a rider (name + phone) for this delivery. */
   rider: RiderInfo | null;
+  /** Code of the compensation coupon applied to this order's total, if any. */
+  couponApplied: string | null;
+  /** Set the moment the customer cancels before delivery — see OrderCancellation. Null for orders that were never cancelled. */
+  cancellation: OrderCancellation | null;
+  /** A post-delivery compensation request — order stays 'delivered', this tracks the claim separately. Null unless one was filed. */
+  refundClaim: RefundClaim | null;
   estimatedMinutes: number;
   status: OrderStatus;
   statusHistory: OrderStatusEvent[];
@@ -110,6 +129,8 @@ export interface UserDoc {
   };
   /** Remembered delivery details — set explicitly from the profile page, or silently kept in sync from the customer's most recent checkout. Null until either happens. */
   defaultAddress: SavedAddress | null;
+  /** Compensation coupons from approved post-delivery refund claims. Usually empty. */
+  coupons: Coupon[];
   createdAt: string;
   updatedAt: string;
 }
@@ -168,4 +189,5 @@ export interface SafeUser {
     expiresAt: string | null;
   };
   defaultAddress: SavedAddress | null;
+  coupons: Coupon[];
 }

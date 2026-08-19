@@ -41,6 +41,7 @@ export async function POST(request: Request) {
     premium: { isMember: false, enrolledAt: null },
     premiumCard: { isActive: false, purchasedAt: null, expiresAt: null },
     defaultAddress: null,
+    coupons: [],
     createdAt: now,
     updatedAt: now,
   };

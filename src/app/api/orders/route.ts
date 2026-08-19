@@ -10,6 +10,8 @@ import {
   isPremiumCardActive,
 } from '@/lib/rewards-eligibility';
 import { recordCompletedOrderForUser } from '@/lib/user-rewards';
+import { findUsableCoupon } from '@/lib/coupons';
+import { markCouponUsed } from '@/lib/coupons-server';
 import { resolveDeliveryCoordinates, haversineDistanceKm } from '@/lib/geo';
 import { generateOrderId } from '@/lib/utils';
 import { getSession } from '@/lib/auth/server';
@@ -115,6 +117,7 @@ export async function POST(request: Request) {
   const coldCoffeeReward = user ? isColdCoffeeRewardOrder(user.rewards.coldCoffeeCounter) : false;
   const freeItemReward = user ? isFreeItemRewardOrder(user.rewards.freeItemCounter) : false;
   const firstOrderBogo = user ? isFirstOrderBogoEligible(user.loyalty.completedOrderCount) : false;
+  const usableCoupon = user ? findUsableCoupon(user.coupons ?? []) : null;
 
   // Distance is only worth resolving for Premium Members / active Premium Card
   // holders — geocoding a typed address costs a network round-trip, skip it
@@ -138,6 +141,7 @@ export async function POST(request: Request) {
     freeItemReward,
     firstOrderBogo,
     freeDeliveryEligible,
+    couponAmountRupees: usableCoupon?.amountRupees,
   });
   const now = new Date().toISOString();
 
@@ -163,6 +167,9 @@ export async function POST(request: Request) {
     deliveryDistanceKm,
     deliveryCoordinates,
     rider: null,
+    couponApplied: totals.couponDiscount > 0 ? (usableCoupon?.code ?? null) : null,
+    cancellation: null,
+    refundClaim: null,
     estimatedMinutes: ESTIMATED_DELIVERY_MINUTES,
     status: 'received',
     statusHistory: [{ status: 'received', at: now }],
@@ -216,6 +223,9 @@ export async function POST(request: Request) {
       coldCoffeeRewardApplied: coldCoffeeReward,
       freeItemRewardApplied: freeItemReward,
     });
+    if (saved.couponApplied) {
+      await markCouponUsed(userId, saved.couponApplied, saved.orderNumber);
+    }
   }
 
   return NextResponse.json({ order: toPlacedOrder(saved) }, { status: 201 });

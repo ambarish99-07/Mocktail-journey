@@ -65,6 +65,8 @@ interface OrderTotalsOptions {
   firstOrderBogo?: boolean;
   /** Premium Member (or active Premium Card) + within the free-delivery radius — decided by the caller (needs geocoding, not pure). */
   freeDeliveryEligible?: boolean;
+  /** Flat rupee amount from a usable compensation coupon — decided by the caller (looks up the user's coupons, not pure). */
+  couponAmountRupees?: number;
 }
 
 /**
@@ -113,7 +115,11 @@ export function computeOrderTotals(items: CartItem[], options: OrderTotalsOption
   const deliveryFee =
     subtotal >= pricingConfig.freeDeliveryThreshold || options.freeDeliveryEligible ? 0 : pricingConfig.deliveryFee;
 
-  const taxableAmount = subtotal - orderDiscount - comboDiscount - coldCoffeeDiscount - freeItemDiscount - bogoDiscount;
+  // Capped so a coupon can never push the taxable amount negative.
+  const preCouponAmount = subtotal - orderDiscount - comboDiscount - coldCoffeeDiscount - freeItemDiscount - bogoDiscount;
+  const couponDiscount = Math.min(options.couponAmountRupees ?? 0, Math.max(0, preCouponAmount));
+
+  const taxableAmount = preCouponAmount - couponDiscount;
   const tax = Math.round((taxableAmount * pricingConfig.taxRatePercent) / 100);
 
   const total = taxableAmount + tax + deliveryFee;
@@ -126,6 +132,7 @@ export function computeOrderTotals(items: CartItem[], options: OrderTotalsOption
     coldCoffeeDiscount,
     freeItemDiscount,
     bogoDiscount,
+    couponDiscount,
     deliveryFee,
     tax,
     total,

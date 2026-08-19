@@ -26,6 +26,11 @@
     --tbc-cream: 34 31 26; /* primary body text */
     --tbc-cream-muted: 91 83 71;
     --tbc-cream-dim: 139 130 114;
+    /* Text-clipped gold wordmark ("Blenders") — the dark-mode gradient's pale
+       start (#F3E4B4) reads fine on near-black but washes out to near-invisible
+       on a white page, so light mode uses a consistently darker gold-to-bronze
+       range with no pale stop at all. */
+    --gold-text-gradient: linear-gradient(135deg, #c29a24 0%, #a17e1b 45%, #7c6115 100%);
   }
 
   .dark {
@@ -38,6 +43,7 @@
     --tbc-cream: 244 237 224;
     --tbc-cream-muted: 201 193 178;
     --tbc-cream-dim: 143 137 124;
+    --gold-text-gradient: linear-gradient(135deg, #f3e4b4 0%, #d4af37 45%, #a17e1b 100%);
   }
 
   * {
@@ -98,7 +104,8 @@
   }
 
   .text-gold-gradient {
-    @apply bg-gold-gradient bg-clip-text text-transparent;
+    background-image: var(--gold-text-gradient);
+    @apply bg-clip-text text-transparent;
   }
 
   /*

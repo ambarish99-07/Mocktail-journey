@@ -24,6 +24,8 @@ export function toPlacedOrder(doc: OrderDoc): PlacedOrder {
     statusHistory: doc.statusHistory ?? [],
     rider,
     deliveryCoordinates: doc.deliveryCoordinates ?? null,
+    cancellation: doc.cancellation ?? null,
+    refundClaim: doc.refundClaim ?? null,
     payment: { method: doc.payment.method, status: doc.payment.status },
   };
 }

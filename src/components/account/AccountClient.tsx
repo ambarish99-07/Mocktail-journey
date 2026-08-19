@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Package, LogOut, Crown, Truck, Pencil, X } from 'lucide-react';
+import { Package, LogOut, Crown, Truck, Pencil, X, Ticket } from 'lucide-react';
 import { toast } from 'sonner';
 import { Container } from '@/components/ui/Container';
 import { Button } from '@/components/ui/Button';
@@ -21,6 +21,7 @@ import {
   isFirstOrderBogoEligible,
 } from '@/lib/rewards-eligibility';
 import { pricingConfig } from '@/lib/config';
+import { findUsableCoupon } from '@/lib/coupons';
 import { loadRazorpayScript } from '@/lib/razorpay-client';
 import { profileUpdateSchema, type ProfileUpdateFormValues } from '@/lib/validation';
 import type { PlacedOrder, OrderStatus } from '@/types/order';
@@ -152,6 +153,8 @@ export function AccountClient() {
     return null;
   }
 
+  const usableCoupon = authUser ? findUsableCoupon(authUser.coupons) : null;
+
   return (
     <Container className="py-16">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -173,6 +176,19 @@ export function AccountClient() {
           </div>
 
           <ProfileSection user={authUser} onUpdated={setUser} />
+
+          {usableCoupon && (
+            <div className="mt-4 flex items-center gap-3 rounded-xl2 border border-tbc-gold-400/50 bg-tbc-gold-400/10 p-6">
+              <Ticket className="h-6 w-6 shrink-0 text-tbc-gold-400" aria-hidden="true" />
+              <div>
+                <p className="font-semibold text-tbc-gold-400">{formatCurrency(usableCoupon.amountRupees)} Coupon Available</p>
+                <p className="text-sm text-tbc-cream-muted">
+                  Applied automatically at your next checkout. Expires{' '}
+                  {usableCoupon.expiresAt && new Date(usableCoupon.expiresAt).toLocaleDateString('en-IN', { dateStyle: 'medium' })}.
+                </p>
+              </div>
+            </div>
+          )}
 
           {isFirstOrderBogoEligible(authUser.loyalty.completedOrderCount) && (
             <div className="mt-4 rounded-xl2 border border-tbc-gold-400/50 bg-tbc-gold-400/10 p-6 text-sm">

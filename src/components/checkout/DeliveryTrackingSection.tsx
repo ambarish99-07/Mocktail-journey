@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { OrderStatusTracker } from './OrderStatusTracker';
 import { RiderContactCard } from './RiderContactCard';
 import { DeliveryNoteBox } from './DeliveryNoteBox';
+import { CancelOrderSection } from './CancelOrderSection';
 import { isRiderLive } from '@/lib/rider-tracking';
 import { getRoadRoute } from '@/lib/osrm';
 import { haversineDistanceKm } from '@/lib/geo';
@@ -22,9 +23,10 @@ const DeliveryMap = dynamic(() => import('./DeliveryMap').then((m) => m.Delivery
 interface DeliveryTrackingSectionProps {
   order: PlacedOrder;
   onNoteSaved: (note: string) => void;
+  onOrderUpdated: (order: PlacedOrder) => void;
 }
 
-export function DeliveryTrackingSection({ order, onNoteSaved }: DeliveryTrackingSectionProps) {
+export function DeliveryTrackingSection({ order, onNoteSaved, onOrderUpdated }: DeliveryTrackingSectionProps) {
   const [route, setRoute] = useState<{ distanceKm: number; durationMinutes: number; path: [number, number][] } | null>(null);
 
   const rider = order.rider;
@@ -99,6 +101,8 @@ export function DeliveryTrackingSection({ order, onNoteSaved }: DeliveryTracking
           onSaved={onNoteSaved}
         />
       )}
+
+      <CancelOrderSection order={order} onUpdated={onOrderUpdated} />
     </div>
   );
 }

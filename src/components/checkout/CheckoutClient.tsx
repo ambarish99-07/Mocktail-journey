@@ -21,6 +21,7 @@ import {
   isPremiumEligible,
   isFirstOrderBogoEligible,
 } from '@/lib/rewards-eligibility';
+import { findUsableCoupon } from '@/lib/coupons';
 import { pricingConfig } from '@/lib/config';
 import { checkoutSchema, type CheckoutFormValues } from '@/lib/validation';
 import { shareCurrentLocation, buildWhatsAppMessage, buildWhatsAppLink } from '@/lib/whatsapp';
@@ -81,7 +82,14 @@ export function CheckoutClient() {
   const coldCoffeeReward = authUser ? isColdCoffeeRewardOrder(authUser.rewards.coldCoffeeCounter) : false;
   const freeItemReward = authUser ? isFreeItemRewardOrder(authUser.rewards.freeItemCounter) : false;
   const firstOrderBogo = authUser ? isFirstOrderBogoEligible(authUser.loyalty.completedOrderCount) : false;
-  const totals = computeOrderTotals(items, { isPremiumMember, coldCoffeeReward, freeItemReward, firstOrderBogo });
+  const usableCoupon = authUser ? findUsableCoupon(authUser.coupons) : null;
+  const totals = computeOrderTotals(items, {
+    isPremiumMember,
+    coldCoffeeReward,
+    freeItemReward,
+    firstOrderBogo,
+    couponAmountRupees: usableCoupon?.amountRupees,
+  });
 
   const handleShareLocation = async () => {
     setLocationStatus('loading');

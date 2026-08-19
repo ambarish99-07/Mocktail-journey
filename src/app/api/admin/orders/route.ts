@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth/server';
 import { getOrdersCollection } from '@/lib/db/collections';
 import type { OrderDoc, OrderStatusEvent } from '@/types/db';
-import type { OrderStatus, PaymentMethod, PaymentStatus } from '@/types/order';
+import type { OrderStatus, PaymentMethod, PaymentStatus, RefundClaim, OrderCancellation } from '@/types/order';
 
 /** Admin-facing order shape — unlike PlacedOrder, includes payment/whatsapp detail admins need to act on. */
 interface AdminOrder {
@@ -19,6 +19,8 @@ interface AdminOrder {
   isGuest: boolean;
   recommendationSentAt?: string;
   rider: { name: string; phone: string } | null;
+  cancellation: OrderCancellation | null;
+  refundClaim: RefundClaim | null;
 }
 
 function toAdminOrder(doc: OrderDoc): AdminOrder {
@@ -36,6 +38,8 @@ function toAdminOrder(doc: OrderDoc): AdminOrder {
     isGuest: doc.userId === null,
     recommendationSentAt: doc.whatsapp.recommendationSentAt,
     rider: doc.rider ? { name: doc.rider.name, phone: doc.rider.phone } : null,
+    cancellation: doc.cancellation ?? null,
+    refundClaim: doc.refundClaim ?? null,
   };
 }
 

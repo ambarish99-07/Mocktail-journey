@@ -13,10 +13,16 @@ export function CartSummary({ totals, className, showSavedBanner = true }: CartS
     totals.comboDiscount +
     totals.coldCoffeeDiscount +
     totals.freeItemDiscount +
-    totals.bogoDiscount;
+    totals.bogoDiscount +
+    totals.couponDiscount;
 
   return (
     <div className={cn('space-y-3', className)}>
+      {totals.couponDiscount > 0 && (
+        <div className="rounded-xl2 border border-tbc-gold-400/50 bg-tbc-gold-400/10 px-4 py-3 text-sm text-tbc-gold-400">
+          🎉 Compensation coupon applied — {formatCurrency(totals.couponDiscount)} off.
+        </div>
+      )}
       {totals.bogoDiscount > 0 && (
         <div className="rounded-xl2 border border-tbc-gold-400/50 bg-tbc-gold-400/10 px-4 py-3 text-sm text-tbc-gold-400">
           🎉 Buy 1 Get 1 Free applied — your first order.
@@ -72,6 +78,13 @@ export function CartSummary({ totals, className, showSavedBanner = true }: CartS
         <Row
           label="Buy 1 Get 1 Free"
           value={`- ${formatCurrency(totals.bogoDiscount)}`}
+          valueClassName="text-tbc-gold-400"
+        />
+      )}
+      {totals.couponDiscount > 0 && (
+        <Row
+          label="Compensation Coupon"
+          value={`- ${formatCurrency(totals.couponDiscount)}`}
           valueClassName="text-tbc-gold-400"
         />
       )}

@@ -1,10 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { RefreshCw, Sparkles, Bike, Copy } from 'lucide-react';
+import { RefreshCw, Sparkles, Bike, Copy, Check, X as XIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatCurrency, cn } from '@/lib/utils';
-import type { OrderStatus, PaymentMethod, PaymentStatus } from '@/types/order';
+import type { OrderStatus, PaymentMethod, PaymentStatus, OrderCancellation, RefundClaim } from '@/types/order';
 import type { OrderStatusEvent } from '@/types/db';
 
 interface AdminOrder {
@@ -21,7 +21,11 @@ interface AdminOrder {
   isGuest: boolean;
   recommendationSentAt?: string;
   rider: { name: string; phone: string } | null;
+  cancellation: OrderCancellation | null;
+  refundClaim: RefundClaim | null;
 }
+
+const REFUND_METHOD_LABELS = { razorpay: 'refunded via Razorpay', coupon: '₹100 coupon issued', none: 'no refund' } as const;
 
 const STATUS_FLOW: OrderStatus[] = ['received', 'preparing', 'out-for-delivery', 'delivered'];
 const STATUS_LABELS: Record<OrderStatus, string> = {
@@ -43,6 +47,7 @@ export function AdminOrdersTable() {
   const [riderName, setRiderName] = useState('');
   const [riderPhone, setRiderPhone] = useState('');
   const [savingRider, setSavingRider] = useState(false);
+  const [decidingClaimId, setDecidingClaimId] = useState<string | null>(null);
 
   const fetchOrders = useCallback(async () => {
     const url = statusFilter === 'all' ? '/api/admin/orders' : `/api/admin/orders?status=${statusFilter}`;
@@ -127,6 +132,34 @@ export function AdminOrdersTable() {
       fetchOrders();
     } finally {
       setSavingRider(false);
+    }
+  };
+
+  const decideRefundClaim = async (order: AdminOrder, decision: 'approve' | 'reject') => {
+    setDecidingClaimId(order.id);
+    try {
+      const res = await fetch(`/api/admin/orders/${order.id}/refund-claim`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ decision }),
+      });
+      const body = await res.json();
+      if (!res.ok) {
+        toast.error(body.error ?? 'Could not decide this claim.');
+        return;
+      }
+      if (decision === 'reject') {
+        toast.success(`Claim rejected for ${order.orderNumber}.`);
+      } else {
+        toast.success(
+          body.note
+            ? `Approved — ${body.note}`
+            : `Approved — ${REFUND_METHOD_LABELS[body.refundMethod as keyof typeof REFUND_METHOD_LABELS] ?? 'processed'}.`
+        );
+      }
+      fetchOrders();
+    } finally {
+      setDecidingClaimId(null);
     }
   };
 
@@ -257,6 +290,65 @@ export function AdminOrdersTable() {
                     <Bike className="h-3.5 w-3.5" aria-hidden="true" />
                     Rider: {order.rider.name} · {order.rider.phone}
                   </p>
+                )}
+
+                {order.cancellation && (
+                  <p className="mt-2 text-xs text-tbc-cream-dim">
+                    Cancelled — {order.cancellation.refundType} refund tier,{' '}
+                    {order.cancellation.refundMethod === 'none'
+                      ? order.payment.method === 'cod'
+                        ? 'nothing collected yet (COD)'
+                        : 'no refund processed'
+                      : `${formatCurrency(order.cancellation.refundAmount)} ${REFUND_METHOD_LABELS[order.cancellation.refundMethod]}`}
+                    .
+                  </p>
+                )}
+
+                {order.refundClaim && (
+                  <div
+                    className={cn(
+                      'mt-3 rounded-xl2 border p-3',
+                      order.refundClaim.status === 'pending'
+                        ? 'border-amber-400/50 bg-amber-400/10'
+                        : order.refundClaim.status === 'approved'
+                          ? 'border-tbc-emerald-500/40 bg-tbc-emerald-500/10'
+                          : 'border-red-400/40 bg-red-400/10'
+                    )}
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-wide text-tbc-cream-dim">
+                      Refund Claim — {order.refundClaim.status}
+                    </p>
+                    <p className="mt-1 text-sm text-tbc-cream-muted">&ldquo;{order.refundClaim.reason}&rdquo;</p>
+                    {order.refundClaim.status !== 'pending' && (
+                      <p className="mt-1 text-xs text-tbc-cream-dim">
+                        {order.refundClaim.refundMethod === 'none'
+                          ? 'No refund issued.'
+                          : `${formatCurrency(order.refundClaim.refundAmount)} ${REFUND_METHOD_LABELS[order.refundClaim.refundMethod]}${order.refundClaim.couponCode ? ` (${order.refundClaim.couponCode})` : ''}.`}
+                      </p>
+                    )}
+                    {order.refundClaim.status === 'pending' && (
+                      <div className="mt-2 flex gap-2">
+                        <button
+                          type="button"
+                          disabled={decidingClaimId === order.id}
+                          onClick={() => decideRefundClaim(order, 'approve')}
+                          className="flex items-center gap-1.5 rounded-full bg-tbc-emerald-500 px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-tbc-emerald-400 disabled:opacity-50"
+                        >
+                          <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                          Approve
+                        </button>
+                        <button
+                          type="button"
+                          disabled={decidingClaimId === order.id}
+                          onClick={() => decideRefundClaim(order, 'reject')}
+                          className="flex items-center gap-1.5 rounded-full border border-red-400/50 px-4 py-1.5 text-xs font-semibold text-red-400 transition-colors hover:bg-red-400/10 disabled:opacity-50"
+                        >
+                          <XIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                          Reject
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 {assigningRiderId === order.id && (

@@ -85,7 +85,11 @@ function ConfirmationContent() {
       </p>
 
       <div className="mt-8 w-full max-w-2xl text-left">
-        <DeliveryTrackingSection order={lastOrder} onNoteSaved={(note) => setLastOrder({ ...lastOrder, delivery: { ...lastOrder.delivery, specialInstructions: note || undefined } })} />
+        <DeliveryTrackingSection
+          order={lastOrder}
+          onNoteSaved={(note) => setLastOrder({ ...lastOrder, delivery: { ...lastOrder.delivery, specialInstructions: note || undefined } })}
+          onOrderUpdated={setLastOrder}
+        />
 
         <div className="mt-6 rounded-xl2 border border-tbc-charcoal-border bg-tbc-charcoal-light p-6">
           <div className="flex items-center justify-between text-sm">

@@ -34,6 +34,43 @@ export interface SafeRiderInfo {
   sharingActive: boolean;
 }
 
+/** How much of the order value comes back, and through what mechanism. */
+export type CancellationRefundType = 'full' | 'half' | 'none';
+export type RefundMethod = 'razorpay' | 'coupon' | 'none';
+export type RefundClaimStatus = 'pending' | 'approved' | 'rejected';
+
+/**
+ * Set the moment a customer cancels before delivery — status-based, no
+ * approval needed: full refund before "out for delivery," half refund once
+ * it's out for delivery. COD orders haven't had cash collected yet at either
+ * point, so refundMethod is 'none' there regardless of refundType — there's
+ * nothing to hand back.
+ */
+export interface OrderCancellation {
+  at: string;
+  refundType: CancellationRefundType;
+  refundAmount: number;
+  refundMethod: RefundMethod;
+  razorpayRefundId?: string;
+}
+
+/**
+ * A post-delivery compensation request — the order already happened (status
+ * stays 'delivered'), so this is a separate claim, not a cancellation. Needs
+ * admin judgment on whether the reason is genuine before any money/coupon
+ * moves, since it's a self-reported claim.
+ */
+export interface RefundClaim {
+  requestedAt: string;
+  reason: string;
+  status: RefundClaimStatus;
+  decidedAt: string | null;
+  refundAmount: number;
+  refundMethod: RefundMethod;
+  razorpayRefundId?: string;
+  couponCode?: string;
+}
+
 export interface OrderTotals {
   subtotal: number;
   /** The quantity-tier discount (non-premium) OR the flat 25% Premium Member discount — never both. Applies only to non-combo lines; combos have their own flat comboDiscount instead. */
@@ -48,6 +85,8 @@ export interface OrderTotals {
   freeItemDiscount: number;
   /** First-order-only "Buy 1 Get 1 Free": cheapest eligible (non-combo) unit is free, requires 2+ eligible units in cart. */
   bogoDiscount: number;
+  /** Flat rupee amount from an applied compensation coupon (e.g. ₹100 off from an approved post-delivery refund claim on a prior order). Capped so it can never make taxableAmount negative. */
+  couponDiscount: number;
   deliveryFee: number;
   tax: number;
   total: number;
@@ -70,6 +109,8 @@ export interface PlacedOrder {
   statusHistory: OrderStatusEvent[];
   rider: SafeRiderInfo | null;
   deliveryCoordinates: { lat: number; lng: number } | null;
+  cancellation: OrderCancellation | null;
+  refundClaim: RefundClaim | null;
   payment: {
     method: PaymentMethod;
     status: PaymentStatus;
