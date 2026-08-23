@@ -29,10 +29,9 @@ export default function TermsPage() {
 
             <h2>2. Orders & Pricing</h2>
             <p>
-              We maintain one consistent menu price across our website, Zomato, and Swiggy. Website
-              orders receive an automatic checkout discount, which is not a change in listed menu
-              price. We reserve the right to correct pricing errors and to modify the menu or prices
-              at any time.
+              Website orders receive an automatic checkout discount, which is not a change in listed
+              menu price. We reserve the right to correct pricing errors and to modify the menu or
+              prices at any time.
             </p>
 
             <h2>3. Payment</h2>

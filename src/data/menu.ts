@@ -1,8 +1,7 @@
 import type { MenuItem } from '@/types/menu';
 
 /**
- * Single source of truth for pricing — mirrored on Zomato & Swiggy listings.
- * Do NOT create different prices per channel; discounts are applied only at
+ * Single source of truth for pricing — discounts are applied only at
  * website checkout (see pricingConfig in lib/config.ts).
  *
  * Images are real product photography, stored locally in public/menu/.

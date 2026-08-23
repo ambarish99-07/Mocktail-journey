@@ -86,7 +86,7 @@ export function MenuPageClient() {
           <SectionHeading
             eyebrow="Our Menu"
             title="Signature Shakes & Cold Coffee"
-            description="One consistent price across our website, Zomato, and Swiggy — order directly for an automatic discount."
+            description="Order directly from our website for an automatic discount."
             align="left"
             className="mx-0"
           />

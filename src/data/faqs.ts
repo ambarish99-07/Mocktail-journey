@@ -8,16 +8,9 @@ export interface Faq {
 export const faqs: Faq[] = [
   {
     id: 'f1',
-    question: 'Why should I order directly from the website instead of Zomato or Swiggy?',
+    question: 'Why should I order directly from the website?',
     answer:
-      'Direct website orders automatically receive 10% off with no coupon required, earn Blenders Club Rewards points, and let you fully customize sugar level, ice level, and add-ons — options not always available on third-party apps.',
-    category: 'ordering',
-  },
-  {
-    id: 'f2',
-    question: 'Are prices different on the website, Zomato, and Swiggy?',
-    answer:
-      'No. We maintain one consistent menu price across all platforms. Website customers simply receive an automatic discount at checkout.',
+      'Direct website orders automatically receive a discount with no coupon required, earn Blenders Club Rewards points, and let you fully customize sugar level, ice level, and add-ons.',
     category: 'ordering',
   },
   {

@@ -14,10 +14,6 @@ export const siteConfig = {
 
 export const orderingConfig = {
   whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '91XXXXXXXXXX',
-  zomatoUrl: process.env.NEXT_PUBLIC_ZOMATO_URL || 'https://www.zomato.com/',
-  swiggyUrl: process.env.NEXT_PUBLIC_SWIGGY_URL || 'https://www.swiggy.com/',
-  zomatoAppScheme: process.env.NEXT_PUBLIC_ZOMATO_APP_SCHEME || '',
-  swiggyAppScheme: process.env.NEXT_PUBLIC_SWIGGY_APP_SCHEME || '',
 } as const;
 
 /** The Blenders Club is a delivery-only cloud kitchen — no walk-in/dine-in at this address. */
@@ -68,7 +64,7 @@ export const pricingConfig = {
     /** Completed orders needed before a customer can opt in. */
     unlockAfterOrders: 15,
     /** Straight-line delivery radius (km) within which Premium Members get free delivery. */
-    freeDeliveryRadiusKm: 4,
+    freeDeliveryRadiusKm: 3,
   },
   /**
    * Premium Membership Card — a paid, time-limited alternative to the
@@ -83,6 +79,21 @@ export const pricingConfig = {
   milestoneRewards: {
     coldCoffee: { every: 6, discountPercent: 50 },
     freeItem: { every: 10 },
+  },
+  /**
+   * Estimated delivery time scales with straight-line distance from the
+   * kitchen instead of quoting the same figure to everyone regardless of how
+   * far they are — see estimateDeliveryMinutes in src/lib/pricing.ts.
+   * baseMinutes covers kitchen prep + dispatch; minutesPerKm is assumed
+   * average delivery speed under city/traffic conditions (~15km/h). Falls
+   * back to the flat default (see ESTIMATED_DELIVERY_MINUTES) whenever the
+   * address couldn't be geocoded, rather than under-promising with 0 extra
+   * travel time.
+   */
+  deliveryTime: {
+    baseMinutes: 20,
+    minutesPerKm: 4,
+    maxMinutes: 75,
   },
   /** Cancellation / refund-claim rules — see src/app/api/orders/[id]/cancel and .../refund-claim. */
   cancellation: {

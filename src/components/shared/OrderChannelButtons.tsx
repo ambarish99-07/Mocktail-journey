@@ -3,9 +3,7 @@
 import Link from 'next/link';
 import { MessageCircle, ShoppingBag } from 'lucide-react';
 import { Button, buttonClasses } from '@/components/ui/Button';
-import { ZomatoIcon, SwiggyIcon } from '@/components/icons/BrandIcons';
 import { buildWhatsAppLink } from '@/lib/whatsapp';
-import { openSwiggy, openZomato } from '@/lib/order-links';
 import { cn } from '@/lib/utils';
 
 interface OrderChannelButtonsProps {
@@ -15,9 +13,9 @@ interface OrderChannelButtonsProps {
 }
 
 /**
- * The four ordering entry points used across the site (hero, nav, footer).
+ * The two ordering entry points used across the site (hero, nav, footer).
  * "Order Directly" is always visually primary per brand direction — it must
- * out-weigh WhatsApp/Zomato/Swiggy in every placement.
+ * out-weigh WhatsApp in every placement.
  */
 export function OrderChannelButtons({ className, compact = false }: OrderChannelButtonsProps) {
   const genericWhatsAppLink = buildWhatsAppLink(
@@ -26,7 +24,7 @@ export function OrderChannelButtons({ className, compact = false }: OrderChannel
 
   // Both modes render at Button's smallest built-in size ('sm') as the
   // mobile-first base — the fixed 'lg'/'md' sizes read oversized on phones
-  // (four buttons wrapping into a bulky stack). Non-compact then grows back
+  // (buttons wrapping into a bulky stack). Non-compact then grows back
   // up to its original larger look via `sm:`-prefixed classes, which only
   // take effect at the sm breakpoint and up and so never conflict with the
   // unprefixed base. Compact stays small at every breakpoint.
@@ -36,7 +34,7 @@ export function OrderChannelButtons({ className, compact = false }: OrderChannel
 
   return (
     <div className={cn('flex flex-wrap items-center gap-2 sm:gap-3', className)}>
-      <Link href="/menu" className={cn(buttonClasses('gold', 'sm'), primaryResponsive, 'order-1')}>
+      <Link href="/menu" className={cn(buttonClasses('gold', 'sm'), primaryResponsive)}>
         <ShoppingBag className={iconClass} aria-hidden="true" />
         Order Directly
       </Link>
@@ -44,21 +42,11 @@ export function OrderChannelButtons({ className, compact = false }: OrderChannel
       <Button
         variant="whatsapp"
         size="sm"
-        className={cn('order-2', secondaryResponsive)}
+        className={secondaryResponsive}
         onClick={() => window.open(genericWhatsAppLink, '_blank', 'noopener,noreferrer')}
       >
         <MessageCircle className={iconClass} aria-hidden="true" />
         WhatsApp
-      </Button>
-
-      <Button variant="zomato" size="sm" className={cn('order-3', secondaryResponsive)} onClick={openZomato}>
-        <ZomatoIcon className={iconClass} aria-hidden="true" />
-        Zomato
-      </Button>
-
-      <Button variant="swiggy" size="sm" className={cn('order-4', secondaryResponsive)} onClick={openSwiggy}>
-        <SwiggyIcon className={iconClass} aria-hidden="true" />
-        Swiggy
       </Button>
     </div>
   );

@@ -139,5 +139,19 @@ export function computeOrderTotals(items: CartItem[], options: OrderTotalsOption
   };
 }
 
-/** Estimated delivery time — The Blenders Club is delivery-only, no pickup/dine-in. */
+/**
+ * Default estimated delivery time — The Blenders Club is delivery-only, no
+ * pickup/dine-in. Used as the pre-order preview in checkout (before the
+ * server has geocoded the typed address) and as the fallback whenever
+ * geocoding fails — see estimateDeliveryMinutes for the real, distance-aware
+ * figure used on the actual placed order.
+ */
 export const ESTIMATED_DELIVERY_MINUTES = 35;
+
+/** Scales with straight-line distance from the kitchen — farther orders get a longer, more honest estimate instead of the same flat figure as a next-door delivery. */
+export function estimateDeliveryMinutes(distanceKm: number | null): number {
+  if (distanceKm === null) return ESTIMATED_DELIVERY_MINUTES;
+  const { baseMinutes, minutesPerKm, maxMinutes } = pricingConfig.deliveryTime;
+  const minutes = baseMinutes + distanceKm * minutesPerKm;
+  return Math.min(maxMinutes, Math.max(baseMinutes, Math.round(minutes)));
+}

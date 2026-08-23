@@ -16,7 +16,7 @@ export const testimonials: Testimonial[] = [
     name: 'Ananya R.',
     rating: 5,
     quote:
-      'The Choco Crush is unreal — thick, rich, and clearly made with real ingredients. Ordering directly from their site got me a discount Zomato never offers.',
+      'The Choco Crush is unreal — thick, rich, and clearly made with real ingredients. Ordering directly from their site got me a discount too.',
     location: 'Indiranagar',
   },
   {

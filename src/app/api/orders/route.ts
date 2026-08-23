@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import crypto from 'node:crypto';
 import { checkoutSchema } from '@/lib/validation';
-import { computeOrderTotals, ESTIMATED_DELIVERY_MINUTES } from '@/lib/pricing';
+import { computeOrderTotals, estimateDeliveryMinutes } from '@/lib/pricing';
 import {
   isColdCoffeeRewardOrder,
   isFreeItemRewardOrder,
@@ -119,18 +119,19 @@ export async function POST(request: Request) {
   const firstOrderBogo = user ? isFirstOrderBogoEligible(user.loyalty.completedOrderCount) : false;
   const usableCoupon = user ? findUsableCoupon(user.coupons ?? []) : null;
 
-  // Distance is only worth resolving for Premium Members / active Premium Card
-  // holders — geocoding a typed address costs a network round-trip, skip it
-  // entirely otherwise.
+  // Resolved for every order now (not just Premium) — the estimated delivery
+  // time scales with distance for everyone, so we need it regardless of
+  // Premium status. Free-delivery eligibility below still only applies to
+  // Premium Members / active Premium Card holders.
   let deliveryDistanceKm: number | null = null;
   let deliveryCoordinates: { lat: number; lng: number } | null = null;
   let freeDeliveryEligible = false;
-  if (isPremiumMember || hasActivePremiumCard) {
-    const fullAddress = [delivery.address, delivery.city, delivery.pincode].filter(Boolean).join(', ');
-    const coords = await resolveDeliveryCoordinates(delivery.mapsLink, fullAddress);
-    if (coords) {
-      deliveryCoordinates = coords;
-      deliveryDistanceKm = haversineDistanceKm({ lat: storeConfig.latitude, lng: storeConfig.longitude }, coords);
+  const fullAddress = [delivery.address, delivery.city, delivery.pincode].filter(Boolean).join(', ');
+  const coords = await resolveDeliveryCoordinates(delivery.mapsLink, fullAddress);
+  if (coords) {
+    deliveryCoordinates = coords;
+    deliveryDistanceKm = haversineDistanceKm({ lat: storeConfig.latitude, lng: storeConfig.longitude }, coords);
+    if (isPremiumMember || hasActivePremiumCard) {
       freeDeliveryEligible = deliveryDistanceKm <= pricingConfig.premium.freeDeliveryRadiusKm;
     }
   }
@@ -170,7 +171,7 @@ export async function POST(request: Request) {
     couponApplied: totals.couponDiscount > 0 ? (usableCoupon?.code ?? null) : null,
     cancellation: null,
     refundClaim: null,
-    estimatedMinutes: ESTIMATED_DELIVERY_MINUTES,
+    estimatedMinutes: estimateDeliveryMinutes(deliveryDistanceKm),
     status: 'received',
     statusHistory: [{ status: 'received', at: now }],
     payment: { method: paymentMethod, status: 'pending' },

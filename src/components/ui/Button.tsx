@@ -2,7 +2,7 @@ import { forwardRef } from 'react';
 import type { ButtonHTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
 
-export type ButtonVariant = 'gold' | 'emerald' | 'whatsapp' | 'zomato' | 'swiggy' | 'outline' | 'ghost';
+export type ButtonVariant = 'gold' | 'emerald' | 'whatsapp' | 'outline' | 'ghost';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -18,11 +18,6 @@ const variantClasses: Record<ButtonVariant, string> = {
   emerald:
     'bg-tbc-emerald-500 text-white font-semibold shadow-emerald-glow hover:bg-tbc-emerald-400 active:bg-tbc-emerald-600',
   whatsapp: 'bg-[#25D366] text-black font-semibold hover:brightness-105 active:brightness-95',
-  // Official brand colors (Zomato red / Swiggy orange). White text on Swiggy's
-  // orange fails contrast (~2.5:1), so it gets dark text instead — same
-  // light-background pattern as the `gold` variant.
-  zomato: 'bg-[#E23744] text-white font-semibold hover:brightness-110 active:brightness-95',
-  swiggy: 'bg-[#FC8019] text-black font-semibold hover:brightness-105 active:brightness-95',
   outline:
     'border border-tbc-gold-400/60 text-tbc-cream hover:bg-tbc-gold-400/10 active:bg-tbc-gold-400/15',
   ghost: 'text-tbc-cream hover:bg-tbc-charcoal-light',
