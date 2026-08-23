@@ -23,40 +23,55 @@ export default function RefundPolicyPage() {
           <LegalContent>
             <h2>1. Order Cancellations</h2>
             <p>
-              As drinks are freshly blended to order, cancellations are only accepted if the order
-              has not yet entered preparation. Please contact us immediately by phone or WhatsApp if
-              you need to cancel.
+              You can cancel an order any time before it is delivered directly from your order
+              confirmation page — no need to call or message us, though you&apos;re welcome to reach
+              us at {storeConfig.phone} or {storeConfig.email} if you&apos;d prefer.
             </p>
-
-            <h2>2. Refund Eligibility</h2>
             <ul>
-              <li>Order was cancelled before preparation began.</li>
-              <li>An item was missing, incorrect, or of unacceptable quality on arrival.</li>
-              <li>The order was significantly delayed beyond the estimated time due to our error.</li>
+              <li>
+                <strong>Before your order is out for delivery:</strong> cancelling gives a full
+                refund.
+              </li>
+              <li>
+                <strong>Once your order is out for delivery:</strong> cancelling gives a half refund
+                — your rider is already on the way with freshly prepared items.
+              </li>
+              <li>
+                <strong>After delivery:</strong> orders can no longer be cancelled, but you can file
+                a refund request instead (see Section 3).
+              </li>
             </ul>
 
-            <h2>3. How to Request a Refund</h2>
+            <h2>2. Refund Amounts &amp; Method</h2>
             <p>
-              Contact us at {storeConfig.phone} or {storeConfig.email} within 24 hours of your order,
-              along with your Order ID and a brief description of the issue.
+              For orders paid online via Razorpay, refunds are issued automatically to your original
+              payment method the moment a cancellation or an approved refund request is processed,
+              and typically reflect in your bank/card/UPI statement within 5–7 business days,
+              depending on your bank. For Cash on Delivery orders, no cash has been collected at the
+              point of cancellation, so there is nothing to refund — the order is simply cancelled at
+              no cost to you.
             </p>
 
-            <h2>4. Refund Method</h2>
+            <h2>3. Post-Delivery Refund Requests</h2>
             <p>
-              Approved refunds will be processed via the original payment method where applicable,
-              or store credit, within 5–7 business days. As online payments are not yet enabled,
-              current orders are settled on delivery, so approved refunds may be issued as store
-              credit toward a future order.
+              If something was genuinely wrong with a delivered order — an item was spilled in
+              transit, incorrect, or missing — you can file a refund request from your order
+              confirmation page describing the issue. Our team reviews every request individually
+              before approving it; self-reported reasons alone don&apos;t automatically trigger a
+              refund. Approved requests on Razorpay-paid orders are refunded to your original payment
+              method. Approved requests on Cash on Delivery orders (where payment was already
+              collected at the door) are compensated with a ₹100 coupon, valid for 60 days on your
+              next order, since a cash refund isn&apos;t possible after the fact.
             </p>
 
-            <h2>5. Non-Refundable Situations</h2>
+            <h2>4. Non-Refundable Situations</h2>
             <p>
-              We are unable to offer refunds for change-of-mind cancellations after preparation has
-              begun, or for delays caused by incorrect address or contact details provided at
-              checkout.
+              We are unable to offer refunds for change-of-mind requests after delivery, or for
+              delays and delivery issues caused by an incorrect address, unreachable phone number, or
+              other incorrect details provided at checkout.
             </p>
 
-            <h2>6. Catering Orders</h2>
+            <h2>5. Catering Orders</h2>
             <p>
               Cancellation and refund terms for catering bookings are confirmed individually as part
               of the catering agreement.

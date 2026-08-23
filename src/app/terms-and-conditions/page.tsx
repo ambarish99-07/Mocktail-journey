@@ -36,9 +36,10 @@ export default function TermsPage() {
 
             <h2>3. Payment</h2>
             <p>
-              At present, orders are payable on delivery (cash/UPI). Online payment options will be
-              added in a future update and will be governed by the payment processor&apos;s terms at
-              that time.
+              Orders can be paid online via Razorpay (cards, UPI, netbanking, wallets) or by Cash on
+              Delivery. Online payments are processed and secured by Razorpay and are governed by
+              Razorpay&apos;s own terms and security practices in addition to these Terms; we do not
+              store your card, UPI, or bank details on our servers.
             </p>
 
             <h2>4. Delivery</h2>
@@ -50,9 +51,16 @@ export default function TermsPage() {
 
             <h2>5. Rewards Program</h2>
             <p>
-              The Blenders Club Rewards discounts (first order, returning customer, Gold Member) are
-              tracked automatically and may be adjusted, paused, or discontinued at our discretion,
-              with reasonable notice where practical.
+              The Blenders Club Rewards (Multi-Shake Discount, combo pricing, first-order Buy 1 Get 1
+              Free, milestone rewards, and Premium Membership) are tracked automatically and may be
+              adjusted, paused, or discontinued at our discretion, with reasonable notice where
+              practical.
+            </p>
+
+            <h2>5a. Cancellations &amp; Refunds</h2>
+            <p>
+              Order cancellations and refunds are governed by our{' '}
+              <a href="/refund-policy">Refund &amp; Cancellation Policy</a>.
             </p>
 
             <h2>6. Catering & Franchise Enquiries</h2>
