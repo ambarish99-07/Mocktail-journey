@@ -18,3 +18,8 @@ export function generateOrderId(): string {
   const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
   return `TBC-${stamp}-${rand}`;
 }
+
+/** "18 August 2026" — used for blog post dates. */
+export function formatBlogDate(isoDate: string): string {
+  return new Date(isoDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+}

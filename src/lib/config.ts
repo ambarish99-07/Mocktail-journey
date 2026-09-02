@@ -118,6 +118,7 @@ export const primaryNavLinks = [
   { label: 'Menu', href: '/menu' },
   { label: 'About', href: '/about' },
   { label: 'Contact', href: '/contact' },
+  { label: 'Blog', href: '/blog' },
 ] as const;
 
 /** Tucked into the desktop nav's "More" dropdown — still shown inline on mobile. */
@@ -138,6 +139,7 @@ export const footerLinks = {
     { label: 'Catering', href: '/catering' },
     { label: 'Franchise', href: '/franchise' },
     { label: 'Gallery', href: '/gallery' },
+    { label: 'Blog', href: '/blog' },
   ],
   support: [
     { label: 'FAQs', href: '/faqs' },
