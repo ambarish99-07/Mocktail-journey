@@ -6,6 +6,8 @@ import { toPlacedOrder } from '@/lib/order-mapping';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import { recordCompletedOrderForUser } from '@/lib/user-rewards';
 import { markCouponUsed } from '@/lib/coupons-server';
+import { markPromoCodeRedeemed } from '@/lib/promo-server';
+import { getPromoCodeDef } from '@/data/promo-codes';
 import type { OrderDoc } from '@/types/db';
 
 export async function POST(request: Request, { params }: { params: { id: string } }) {
@@ -79,7 +81,11 @@ export async function POST(request: Request, { params }: { params: { id: string 
       freeItemRewardApplied: order.freeItemRewardApplied,
     });
     if (order.couponApplied) {
-      await markCouponUsed(order.userId, order.couponApplied, order.orderNumber);
+      if (getPromoCodeDef(order.couponApplied)) {
+        await markPromoCodeRedeemed(order.userId, order.couponApplied);
+      } else {
+        await markCouponUsed(order.userId, order.couponApplied, order.orderNumber);
+      }
     }
   }
 

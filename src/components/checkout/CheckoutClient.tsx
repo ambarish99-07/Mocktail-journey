@@ -11,10 +11,11 @@ import { LocateFixed, MessageCircle, ShoppingBag } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
 import { Button, buttonClasses } from '@/components/ui/Button';
 import { CartSummary } from '@/components/cart/CartSummary';
+import { StoreClosedBanner } from '@/components/shared/StoreClosedBanner';
 import { useCartStore } from '@/lib/store/cart-store';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useOrderStore } from '@/lib/store/order-store';
-import { computeOrderTotals, ESTIMATED_DELIVERY_MINUTES } from '@/lib/pricing';
+import { computeOrderTotals, cartSubtotal, ESTIMATED_DELIVERY_MINUTES } from '@/lib/pricing';
 import {
   isColdCoffeeRewardOrder,
   isFreeItemRewardOrder,
@@ -43,6 +44,10 @@ export function CheckoutClient() {
   const [locationError, setLocationError] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cod');
   const [isPaying, setIsPaying] = useState(false);
+  const [promoInput, setPromoInput] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string; amountRupees: number } | null>(null);
+  const [promoStatus, setPromoStatus] = useState<'idle' | 'checking' | 'error'>('idle');
+  const [promoError, setPromoError] = useState<string | null>(null);
 
   const {
     register,
@@ -83,13 +88,48 @@ export function CheckoutClient() {
   const freeItemReward = authUser ? isFreeItemRewardOrder(authUser.rewards.freeItemCounter) : false;
   const firstOrderBogo = authUser ? isFirstOrderBogoEligible(authUser.loyalty.completedOrderCount) : false;
   const usableCoupon = authUser ? findUsableCoupon(authUser.coupons) : null;
+  // A compensation coupon (already owed) always wins over a typed promo code —
+  // mirrors the mutually-exclusive precedence enforced server-side in POST /api/orders.
   const totals = computeOrderTotals(items, {
     isPremiumMember,
     coldCoffeeReward,
     freeItemReward,
     firstOrderBogo,
-    couponAmountRupees: usableCoupon?.amountRupees,
+    couponAmountRupees: usableCoupon?.amountRupees ?? appliedPromo?.amountRupees,
+    couponLabel: usableCoupon ? undefined : appliedPromo ? `Coupon (${appliedPromo.code})` : undefined,
   });
+
+  const handleApplyPromo = async () => {
+    if (!promoInput.trim()) return;
+    setPromoStatus('checking');
+    setPromoError(null);
+    try {
+      const res = await fetch('/api/promo/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: promoInput.trim(), subtotal: cartSubtotal(items) }),
+      });
+      const body = await res.json();
+      if (!res.ok) {
+        setPromoStatus('error');
+        setPromoError(body.error ?? 'That code isn’t valid.');
+        return;
+      }
+      setAppliedPromo(body.promo);
+      setPromoStatus('idle');
+      toast.success(`Coupon ${body.promo.code} applied.`);
+    } catch {
+      setPromoStatus('error');
+      setPromoError('Could not check that code. Please try again.');
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setAppliedPromo(null);
+    setPromoInput('');
+    setPromoError(null);
+    setPromoStatus('idle');
+  };
 
   const handleShareLocation = async () => {
     setLocationStatus('loading');
@@ -115,7 +155,12 @@ export function CheckoutClient() {
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items, delivery: data, paymentMethod }),
+        body: JSON.stringify({
+          items,
+          delivery: data,
+          paymentMethod,
+          promoCode: !usableCoupon ? appliedPromo?.code : undefined,
+        }),
       });
       const body = await res.json();
       if (!res.ok) {
@@ -219,6 +264,10 @@ export function CheckoutClient() {
   return (
     <Container className="py-16">
       <h1 className="text-3xl font-semibold sm:text-4xl">Checkout</h1>
+
+      <div className="mt-6">
+        <StoreClosedBanner />
+      </div>
 
       <form
         onSubmit={handleSubmit(onPlaceOrder)}
@@ -396,6 +445,51 @@ export function CheckoutClient() {
               </li>
             ))}
           </ul>
+
+          {usableCoupon ? (
+            <p className="mb-4 text-xs text-tbc-cream-dim">
+              Your ₹{usableCoupon.amountRupees} compensation credit will be applied automatically at checkout.
+            </p>
+          ) : (
+            <div className="mb-4">
+              {appliedPromo ? (
+                <div className="flex items-center justify-between rounded-xl2 border border-tbc-gold-400/40 bg-tbc-gold-400/10 px-3 py-2 text-sm">
+                  <span className="text-tbc-gold-400">
+                    Coupon <strong>{appliedPromo.code}</strong> applied
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleRemovePromo}
+                    className="text-xs font-medium text-tbc-cream-muted hover:text-tbc-cream"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <input
+                    value={promoInput}
+                    onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                    placeholder="Have a coupon code?"
+                    className={cn(inputClass, 'flex-1 text-sm')}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={promoStatus === 'checking'}
+                    onClick={handleApplyPromo}
+                  >
+                    {promoStatus === 'checking' ? 'Checking…' : 'Apply'}
+                  </Button>
+                </div>
+              )}
+              {promoError && <p className="mt-1.5 text-xs text-red-400">{promoError}</p>}
+              <Link href="/offers" className="mt-1.5 inline-block text-xs text-tbc-cream-dim hover:text-tbc-gold-400 hover:underline">
+                See available offers
+              </Link>
+            </div>
+          )}
 
           <CartSummary totals={totals} />
 

@@ -65,8 +65,10 @@ interface OrderTotalsOptions {
   firstOrderBogo?: boolean;
   /** Premium Member (or active Premium Card) + within the free-delivery radius — decided by the caller (needs geocoding, not pure). */
   freeDeliveryEligible?: boolean;
-  /** Flat rupee amount from a usable compensation coupon — decided by the caller (looks up the user's coupons, not pure). */
+  /** Flat rupee amount from a usable compensation coupon or a validated promo code — decided by the caller (not pure — looks up the user's coupons / resolves the code). */
   couponAmountRupees?: number;
+  /** Display label for couponAmountRupees, e.g. "Compensation Coupon" or "Coupon (WELCOME50)". Defaults to "Compensation Coupon" for existing call sites that don't pass one. */
+  couponLabel?: string;
 }
 
 /**
@@ -118,6 +120,7 @@ export function computeOrderTotals(items: CartItem[], options: OrderTotalsOption
   // Capped so a coupon can never push the taxable amount negative.
   const preCouponAmount = subtotal - orderDiscount - comboDiscount - coldCoffeeDiscount - freeItemDiscount - bogoDiscount;
   const couponDiscount = Math.min(options.couponAmountRupees ?? 0, Math.max(0, preCouponAmount));
+  const couponLabel = couponDiscount > 0 ? options.couponLabel ?? 'Compensation Coupon' : '';
 
   const taxableAmount = preCouponAmount - couponDiscount;
   const tax = Math.round((taxableAmount * pricingConfig.taxRatePercent) / 100);
@@ -133,6 +136,7 @@ export function computeOrderTotals(items: CartItem[], options: OrderTotalsOption
     freeItemDiscount,
     bogoDiscount,
     couponDiscount,
+    couponLabel,
     deliveryFee,
     tax,
     total,

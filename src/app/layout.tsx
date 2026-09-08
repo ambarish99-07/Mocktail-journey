@@ -4,6 +4,7 @@ import './globals.css';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { CartDrawer } from '@/components/cart/CartDrawer';
+import { ActiveOrderWidget } from '@/components/shared/ActiveOrderWidget';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
 import { MicrosoftClarity } from '@/components/analytics/MicrosoftClarity';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
@@ -93,6 +94,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <main id="main-content">{children}</main>
           <Footer />
           <CartDrawer />
+          <ActiveOrderWidget />
           <AppToaster />
           <GoogleAnalytics />
           <MicrosoftClarity />

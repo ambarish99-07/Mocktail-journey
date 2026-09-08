@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import crypto from 'node:crypto';
 import { checkoutSchema } from '@/lib/validation';
-import { computeOrderTotals, estimateDeliveryMinutes } from '@/lib/pricing';
+import { computeOrderTotals, estimateDeliveryMinutes, cartSubtotal } from '@/lib/pricing';
 import {
   isColdCoffeeRewardOrder,
   isFreeItemRewardOrder,
@@ -12,6 +12,7 @@ import {
 import { recordCompletedOrderForUser } from '@/lib/user-rewards';
 import { findUsableCoupon } from '@/lib/coupons';
 import { markCouponUsed } from '@/lib/coupons-server';
+import { resolvePromoCode, markPromoCodeRedeemed } from '@/lib/promo-server';
 import { resolveDeliveryCoordinates, haversineDistanceKm } from '@/lib/geo';
 import { generateOrderId } from '@/lib/utils';
 import { getSession } from '@/lib/auth/server';
@@ -21,6 +22,7 @@ import { notifyAdminNewOrder } from '@/lib/whatsapp-server';
 import { getRazorpayClient } from '@/lib/razorpay';
 import { toPlacedOrder } from '@/lib/order-mapping';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { getStoreStatus } from '@/lib/store-status';
 import { storeConfig, pricingConfig } from '@/lib/config';
 import type { OrderDoc, UserDoc } from '@/types/db';
 
@@ -44,6 +46,19 @@ export async function POST(request: Request) {
   const ip = getClientIp(request);
   if (!checkRateLimit('orders-create', ip, 20, 10 * 60 * 1000)) {
     return NextResponse.json({ error: 'Too many orders placed — please try again shortly.' }, { status: 429 });
+  }
+
+  const storeStatus = getStoreStatus();
+  if (!storeStatus.isOpen) {
+    return NextResponse.json(
+      {
+        error:
+          storeStatus.reason === 'manually-closed'
+            ? 'We’re temporarily not accepting orders right now. Please check back shortly.'
+            : `We're closed right now — orders open again at ${storeStatus.opensAtLabel}.`,
+      },
+      { status: 503 }
+    );
   }
 
   const body = await request.json().catch(() => null);
@@ -119,6 +134,26 @@ export async function POST(request: Request) {
   const firstOrderBogo = user ? isFirstOrderBogoEligible(user.loyalty.completedOrderCount) : false;
   const usableCoupon = user ? findUsableCoupon(user.coupons ?? []) : null;
 
+  // A compensation coupon (owed to the customer already) always takes
+  // precedence over a self-service promo code — never trust the client's
+  // promo amount, re-resolve server-side, and only try it when there's no
+  // compensation coupon to auto-apply instead (mutually exclusive, see
+  // resolveOrderTotals's couponAmountRupees).
+  const rawPromoCode = (body as Record<string, unknown>).promoCode;
+  let appliedPromoCode: string | null = null;
+  let couponAmountRupees = usableCoupon?.amountRupees;
+  let couponLabel: string | undefined;
+  if (!usableCoupon && typeof rawPromoCode === 'string' && rawPromoCode.trim()) {
+    const resolved = resolvePromoCode(rawPromoCode, cartSubtotal(items), user);
+    if (resolved.ok) {
+      appliedPromoCode = resolved.promo.code;
+      couponAmountRupees = resolved.promo.amountRupees;
+      couponLabel = `Coupon (${resolved.promo.code})`;
+    } else {
+      return NextResponse.json({ error: resolved.error }, { status: 400 });
+    }
+  }
+
   // Resolved for every order now (not just Premium) — the estimated delivery
   // time scales with distance for everyone, so we need it regardless of
   // Premium status. Free-delivery eligibility below still only applies to
@@ -142,7 +177,8 @@ export async function POST(request: Request) {
     freeItemReward,
     firstOrderBogo,
     freeDeliveryEligible,
-    couponAmountRupees: usableCoupon?.amountRupees,
+    couponAmountRupees,
+    couponLabel,
   });
   const now = new Date().toISOString();
 
@@ -168,7 +204,7 @@ export async function POST(request: Request) {
     deliveryDistanceKm,
     deliveryCoordinates,
     rider: null,
-    couponApplied: totals.couponDiscount > 0 ? (usableCoupon?.code ?? null) : null,
+    couponApplied: totals.couponDiscount > 0 ? (usableCoupon?.code ?? appliedPromoCode ?? null) : null,
     cancellation: null,
     refundClaim: null,
     estimatedMinutes: estimateDeliveryMinutes(deliveryDistanceKm),
@@ -224,8 +260,10 @@ export async function POST(request: Request) {
       coldCoffeeRewardApplied: coldCoffeeReward,
       freeItemRewardApplied: freeItemReward,
     });
-    if (saved.couponApplied) {
+    if (usableCoupon && saved.couponApplied) {
       await markCouponUsed(userId, saved.couponApplied, saved.orderNumber);
+    } else if (appliedPromoCode) {
+      await markPromoCodeRedeemed(userId, appliedPromoCode);
     }
   }
 

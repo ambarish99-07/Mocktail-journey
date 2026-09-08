@@ -27,6 +27,10 @@ export const storeConfig = {
     process.env.NEXT_PUBLIC_GOOGLE_MAPS_URL ||
     'https://www.google.com/maps/search/?api=1&query=Chaturi+Nagar+Road%2C+Rampati+Nagari%2C+New+Chamman+Chak%2C+Beside+Gyan+Ganga+Trade+Centre%2C+Bypass+Road%2C+Patna%2C+Bihar',
   openingHours: '12:00 PM – 12:00 AM, all days (delivery hours)',
+  /** Structured form of the label above — see src/lib/store-status.ts. closeHour: 24 means "midnight" (hour < 24 is always true, so this correctly means "open until end of day"). */
+  hours: { timezone: 'Asia/Kolkata', openHour: 12, closeHour: 24 } as const,
+  /** Emergency manual override (e.g. equipment down, staff shortage) — closes ordering regardless of hours. Not a schedule, just a kill switch; flip back by removing/unsetting the env var. */
+  manuallyClosed: process.env.STORE_MANUALLY_CLOSED === 'true',
   /**
    * PLACEHOLDER — the exact street address doesn't resolve via free geocoding
    * (too new/informal for OpenStreetMap's data), so these default to Patna's
@@ -126,6 +130,7 @@ export const moreNavLinks = [
   { label: 'Catering', href: '/catering' },
   { label: 'Franchise', href: '/franchise' },
   { label: 'Rewards', href: '/rewards' },
+  { label: 'Offers', href: '/offers' },
   { label: 'Gallery', href: '/gallery' },
   { label: 'FAQs', href: '/faqs' },
 ] as const;
@@ -145,6 +150,7 @@ export const footerLinks = {
     { label: 'FAQs', href: '/faqs' },
     { label: 'Contact', href: '/contact' },
     { label: 'Rewards', href: '/rewards' },
+    { label: 'Offers', href: '/offers' },
   ],
   legal: [
     { label: 'Privacy Policy', href: '/privacy-policy' },

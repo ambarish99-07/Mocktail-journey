@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { Container } from '@/components/ui/Container';
 import { SectionHeading } from '@/components/ui/SectionHeading';
+import { StoreClosedBanner } from '@/components/shared/StoreClosedBanner';
 import { MenuFilters } from '@/components/menu/MenuFilters';
 import type { CategoryFilter, SortOption } from '@/components/menu/MenuFilters';
 import { MenuCard } from '@/components/menu/MenuCard';
@@ -90,6 +91,10 @@ export function MenuPageClient() {
             align="left"
             className="mx-0"
           />
+
+          <div className="mt-6">
+            <StoreClosedBanner />
+          </div>
 
           {(staffPicks.length > 0 || trending.length > 0) && (
             <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2">

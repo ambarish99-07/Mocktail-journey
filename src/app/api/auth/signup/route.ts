@@ -42,6 +42,7 @@ export async function POST(request: Request) {
     premiumCard: { isActive: false, purchasedAt: null, expiresAt: null },
     defaultAddress: null,
     coupons: [],
+    redeemedPromoCodes: [],
     createdAt: now,
     updatedAt: now,
   };

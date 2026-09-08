@@ -131,6 +131,8 @@ export interface UserDoc {
   defaultAddress: SavedAddress | null;
   /** Compensation coupons from approved post-delivery refund claims. Usually empty. */
   coupons: Coupon[];
+  /** Codes (from src/data/promo-codes.ts) this account has redeemed with `oncePerCustomer: true` — checked, never removed. */
+  redeemedPromoCodes: string[];
   createdAt: string;
   updatedAt: string;
 }

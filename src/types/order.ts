@@ -85,8 +85,10 @@ export interface OrderTotals {
   freeItemDiscount: number;
   /** First-order-only "Buy 1 Get 1 Free": cheapest eligible (non-combo) unit is free, requires 2+ eligible units in cart. */
   bogoDiscount: number;
-  /** Flat rupee amount from an applied compensation coupon (e.g. ₹100 off from an approved post-delivery refund claim on a prior order). Capped so it can never make taxableAmount negative. */
+  /** Flat rupee amount from an applied compensation coupon or a self-service promo code (never both — see resolvePromoCode). Capped so it can never make taxableAmount negative. */
   couponDiscount: number;
+  /** Human-readable source of couponDiscount, e.g. "Compensation Coupon" or "Coupon (WELCOME50)". Empty string when couponDiscount is 0. */
+  couponLabel: string;
   deliveryFee: number;
   tax: number;
   total: number;

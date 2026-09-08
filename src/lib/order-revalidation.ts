@@ -81,3 +81,24 @@ export function revalidateCartItems(items: unknown): CartItem[] {
     };
   });
 }
+
+/**
+ * Reorder-specific variant: re-prices each line against the CURRENT menu (a
+ * past order's stored unitPrice is a snapshot, never trusted for a new
+ * order — same "never trust a stale price" principle as checkout), but
+ * unlike revalidateCartItems it never throws for one bad line — a menu item
+ * removed since the original order was placed just gets skipped and named in
+ * `skipped`, rather than blocking the whole reorder.
+ */
+export function revalidateCartItemsLenient(items: CartItem[]): { items: CartItem[]; skipped: string[] } {
+  const valid: CartItem[] = [];
+  const skipped: string[] = [];
+  for (const item of items) {
+    try {
+      valid.push(...revalidateCartItems([item]));
+    } catch {
+      skipped.push(item.signatureName || item.menuItemId);
+    }
+  }
+  return { items: valid, skipped };
+}

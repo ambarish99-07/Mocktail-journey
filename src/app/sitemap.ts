@@ -9,6 +9,7 @@ const staticRoutes = [
   '/catering',
   '/franchise',
   '/rewards',
+  '/offers',
   '/gallery',
   '/faqs',
   '/contact',

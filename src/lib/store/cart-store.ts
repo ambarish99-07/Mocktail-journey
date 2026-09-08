@@ -11,6 +11,8 @@ interface CartState {
   isDrawerOpen: boolean;
   lastAddedMenuItemId: string | null;
   addItem: (menuItem: MenuItem, quantity: number, customization: CartCustomization) => void;
+  /** Bulk-adds freshly-repriced lines (e.g. from a reorder) — appended as-is, not merged with existing lines by customization key. */
+  addReorderItems: (items: CartItem[]) => void;
   removeLine: (lineId: string) => void;
   updateQuantity: (lineId: string, quantity: number) => void;
   toggleFavorite: (menuItemId: string) => void;
@@ -67,6 +69,16 @@ export const useCartStore = create<CartState>()(
           lastAddedMenuItemId: menuItem.id,
           isDrawerOpen: true,
         });
+      },
+
+      addReorderItems: (newItems) => {
+        // Fresh lineIds — these came from a past order's items, not the picker,
+        // so their old lineId could collide with something already in the cart.
+        const withFreshIds: CartItem[] = newItems.map((item) => ({
+          ...item,
+          lineId: `${item.menuItemId}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        }));
+        set({ items: [...get().items, ...withFreshIds], isDrawerOpen: true });
       },
 
       removeLine: (lineId) => set({ items: get().items.filter((item) => item.lineId !== lineId) }),

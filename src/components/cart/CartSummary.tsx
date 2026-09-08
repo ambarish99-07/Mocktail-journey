@@ -20,7 +20,7 @@ export function CartSummary({ totals, className, showSavedBanner = true }: CartS
     <div className={cn('space-y-3', className)}>
       {totals.couponDiscount > 0 && (
         <div className="rounded-xl2 border border-tbc-gold-400/50 bg-tbc-gold-400/10 px-4 py-3 text-sm text-tbc-gold-400">
-          🎉 Compensation coupon applied — {formatCurrency(totals.couponDiscount)} off.
+          🎉 {totals.couponLabel || 'Compensation coupon'} applied — {formatCurrency(totals.couponDiscount)} off.
         </div>
       )}
       {totals.bogoDiscount > 0 && (
@@ -83,7 +83,7 @@ export function CartSummary({ totals, className, showSavedBanner = true }: CartS
       )}
       {totals.couponDiscount > 0 && (
         <Row
-          label="Compensation Coupon"
+          label={totals.couponLabel || 'Compensation Coupon'}
           value={`- ${formatCurrency(totals.couponDiscount)}`}
           valueClassName="text-tbc-gold-400"
         />

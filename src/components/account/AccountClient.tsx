@@ -5,13 +5,14 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Package, LogOut, Crown, Truck, Pencil, X, Ticket } from 'lucide-react';
+import { Package, LogOut, Crown, Truck, Pencil, X, Ticket, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Container } from '@/components/ui/Container';
 import { Button } from '@/components/ui/Button';
 import { FormField, inputClass } from '@/components/ui/FormField';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useAuthStore } from '@/lib/store/auth-store';
+import { useCartStore } from '@/lib/store/cart-store';
 import {
   isPremiumEligible,
   isPremiumCardActive,
@@ -51,6 +52,8 @@ export function AccountClient() {
   const [orders, setOrders] = useState<PlacedOrder[] | null>(null);
   const [enrolling, setEnrolling] = useState(false);
   const [buyingCard, setBuyingCard] = useState(false);
+  const [reorderingId, setReorderingId] = useState<string | null>(null);
+  const addReorderItems = useCartStore((s) => s.addReorderItems);
 
   useEffect(() => {
     fetch('/api/orders')
@@ -58,6 +61,30 @@ export function AccountClient() {
       .then((body: { orders: PlacedOrder[] }) => setOrders(body.orders))
       .catch(() => setOrders([]));
   }, []);
+
+  const handleReorder = async (orderId: string) => {
+    setReorderingId(orderId);
+    try {
+      const res = await fetch(`/api/orders/${orderId}/reorder`);
+      const body = await res.json();
+      if (!res.ok) {
+        toast.error(body.error ?? 'Could not reorder — please add items manually.');
+        return;
+      }
+      addReorderItems(body.items);
+      if (body.skipped?.length) {
+        toast.error(`Added what's still available — ${body.skipped.join(', ')} no longer on the menu.`);
+      } else if (body.priceChanged) {
+        toast.success('Added to cart — note that some prices have changed since this order.');
+      } else {
+        toast.success('Added to cart.');
+      }
+    } catch {
+      toast.error('Could not reorder. Please check your connection.');
+    } finally {
+      setReorderingId(null);
+    }
+  };
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -300,6 +327,17 @@ export function AccountClient() {
                 >
                   Track Order →
                 </Link>
+              )}
+              {order.status === 'delivered' && (
+                <button
+                  type="button"
+                  onClick={() => handleReorder(order.id)}
+                  disabled={reorderingId === order.id}
+                  className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-tbc-gold-400 hover:underline disabled:opacity-60"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+                  {reorderingId === order.id ? 'Adding…' : 'Reorder'}
+                </button>
               )}
             </li>
           ))}
